@@ -200,6 +200,11 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     // MARK: - Playback
 
     private func playItem(_ item: VideoItem) {
+        guard IdleDetector.shared.isIdle else {
+            showError("Video available when stopped")
+            return
+        }
+
         guard item.extractionStatus == .ready else {
             // Trigger extraction then play
             Task { @MainActor in
@@ -212,6 +217,11 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     }
 
     private func playFromService(service: VideoService, item: VideoItem) {
+        guard IdleDetector.shared.isIdle else {
+            showError("Video available when stopped")
+            return
+        }
+
         Task { @MainActor in
             do {
                 let stream = try await service.extractStream(for: item)

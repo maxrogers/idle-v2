@@ -3,16 +3,24 @@ import SwiftUI
 struct QueueView: View {
     @ObservedObject private var queue = QueueManager.shared
     @ObservedObject private var playback = PlaybackEngine.shared
+    @State private var showNowPlaying = false
 
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.idleSurface.ignoresSafeArea()
 
-                if queue.pendingItems.isEmpty && queue.historyItems.isEmpty {
-                    emptyState
-                } else {
-                    itemsList
+                VStack(spacing: 0) {
+                    if queue.pendingItems.isEmpty && queue.historyItems.isEmpty && playback.currentItem == nil {
+                        emptyState
+                            .frame(maxHeight: .infinity)
+                    } else {
+                        itemsList
+                    }
+
+                    if playback.currentItem != nil {
+                        NowPlayingBar(showSheet: $showNowPlaying)
+                    }
                 }
             }
             .navigationTitle("idle")
@@ -22,6 +30,9 @@ struct QueueView: View {
                         nowPlayingBadge
                     }
                 }
+            }
+            .sheet(isPresented: $showNowPlaying) {
+                NowPlayingSheet()
             }
         }
     }
@@ -157,5 +168,217 @@ struct VideoItemRow: View {
         case .generic: return "globe"
         case .directURL: return "link"
         }
+    }
+}
+
+// MARK: - Now Playing Bar
+
+struct NowPlayingBar: View {
+    @ObservedObject private var playback = PlaybackEngine.shared
+    @Binding var showSheet: Bool
+
+    var body: some View {
+        Button {
+            showSheet = true
+        } label: {
+            HStack(spacing: 12) {
+                // Source icon
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.idleCard)
+                    .frame(width: 40, height: 40)
+                    .overlay {
+                        Image(systemName: playback.currentItem.map { iconForSource($0.source) } ?? "play.fill")
+                            .foregroundColor(.idleAmber)
+                            .font(.system(size: 14))
+                    }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(playback.currentItem?.title ?? "Now Playing")
+                        .font(.idleBody)
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+
+                    HStack(spacing: 4) {
+                        if CarPlaySceneDelegate.isConnected {
+                            Circle()
+                                .fill(Color.idleAmber)
+                                .frame(width: 6, height: 6)
+                            Text("CarPlay")
+                                .font(.idleCaption)
+                                .foregroundColor(.idleAmber)
+                        } else {
+                            Text(playback.currentItem?.source.rawValue.capitalized ?? "")
+                                .font(.idleCaption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                }
+
+                Spacer()
+
+                // Play/Pause
+                Button {
+                    playback.togglePlayPause()
+                } label: {
+                    Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.white)
+                }
+                .buttonStyle(.plain)
+
+                // Stop
+                Button {
+                    playback.stop()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14))
+                        .foregroundColor(.gray)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.idleCard)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func iconForSource(_ source: VideoSource) -> String {
+        switch source {
+        case .youtube: return "play.rectangle.fill"
+        case .plex: return "play.rectangle.on.rectangle"
+        case .generic: return "globe"
+        case .directURL: return "link"
+        }
+    }
+}
+
+// MARK: - Now Playing Sheet
+
+struct NowPlayingSheet: View {
+    @ObservedObject private var playback = PlaybackEngine.shared
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack {
+            Color.idleSurface.ignoresSafeArea()
+
+            VStack(spacing: 32) {
+                // Drag indicator
+                Capsule()
+                    .fill(Color.gray.opacity(0.4))
+                    .frame(width: 36, height: 5)
+                    .padding(.top, 8)
+
+                Spacer()
+
+                // Video icon
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.idleCard)
+                    .frame(width: 200, height: 130)
+                    .overlay {
+                        Image(systemName: "play.tv")
+                            .font(.system(size: 48, weight: .thin))
+                            .foregroundColor(.idleAmber)
+                    }
+
+                // Title & Source
+                VStack(spacing: 8) {
+                    Text(playback.currentItem?.title ?? "Not Playing")
+                        .font(.idleTitle)
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(3)
+
+                    HStack(spacing: 6) {
+                        if CarPlaySceneDelegate.isConnected {
+                            Circle()
+                                .fill(Color.idleAmber)
+                                .frame(width: 8, height: 8)
+                            Text("Playing on CarPlay")
+                                .font(.idleBody)
+                                .foregroundColor(.idleAmber)
+                        } else {
+                            Text(playback.currentItem?.source.rawValue.capitalized ?? "")
+                                .font(.idleBody)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+
+                // Scrubber
+                VStack(spacing: 4) {
+                    Slider(
+                        value: Binding(
+                            get: { playback.currentTime },
+                            set: { playback.seek(to: $0) }
+                        ),
+                        in: 0...max(playback.duration, 1)
+                    )
+                    .tint(.idleAmber)
+
+                    HStack {
+                        Text(formatTime(playback.currentTime))
+                            .font(.idleCaption)
+                            .foregroundColor(.gray)
+                        Spacer()
+                        Text(formatTime(playback.duration))
+                            .font(.idleCaption)
+                            .foregroundColor(.gray)
+                    }
+                }
+                .padding(.horizontal, 24)
+
+                // Transport Controls
+                HStack(spacing: 40) {
+                    Button {
+                        playback.seek(to: max(0, playback.currentTime - 15))
+                    } label: {
+                        Image(systemName: "gobackward.15")
+                            .font(.system(size: 24))
+                            .foregroundColor(.white)
+                    }
+
+                    Button {
+                        playback.togglePlayPause()
+                    } label: {
+                        Image(systemName: playback.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                            .font(.system(size: 56))
+                            .foregroundColor(.idleAmber)
+                    }
+
+                    Button {
+                        playback.seek(to: playback.currentTime + 15)
+                    } label: {
+                        Image(systemName: "goforward.15")
+                            .font(.system(size: 24))
+                            .foregroundColor(.white)
+                    }
+                }
+
+                Spacer()
+
+                // Stop button
+                Button {
+                    playback.stop()
+                    dismiss()
+                } label: {
+                    Text("Stop Playback")
+                        .font(.idleBody)
+                        .foregroundColor(.red)
+                }
+                .padding(.bottom, 16)
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.hidden)
+    }
+
+    private func formatTime(_ seconds: Double) -> String {
+        guard seconds.isFinite && seconds >= 0 else { return "0:00" }
+        let mins = Int(seconds) / 60
+        let secs = Int(seconds) % 60
+        return String(format: "%d:%02d", mins, secs)
     }
 }

@@ -1,5 +1,6 @@
 import AVFoundation
 import Combine
+import MediaPlayer
 import UIKit
 
 /// Manages all video playback via AVPlayer.
@@ -30,6 +31,7 @@ final class PlaybackEngine: ObservableObject {
     private init() {
         configureAudioSession()
         configureAirPlay()
+        setupRemoteCommandCenter()
         setupObservers()
         setupInterruptionHandling()
     }
@@ -46,6 +48,7 @@ final class PlaybackEngine: ObservableObject {
         isPlaying = true
 
         item.playedAt = Date()
+        updateNowPlayingInfo()
     }
 
     func play(url: URL) {
@@ -85,6 +88,7 @@ final class PlaybackEngine: ObservableObject {
         currentItem = nil
         currentTime = 0
         duration = 0
+        clearNowPlayingInfo()
     }
 
     // MARK: - Configuration
@@ -113,6 +117,7 @@ final class PlaybackEngine: ObservableObject {
                 if let duration = self?.player.currentItem?.duration.seconds, duration.isFinite {
                     self?.duration = duration
                 }
+                self?.updateNowPlayingElapsedTime()
             }
         }
 
@@ -130,6 +135,89 @@ final class PlaybackEngine: ObservableObject {
             }
         }
     }
+
+    // MARK: - Remote Command Center
+
+    private func setupRemoteCommandCenter() {
+        let center = MPRemoteCommandCenter.shared()
+
+        center.playCommand.addTarget { [weak self] _ in
+            Task { @MainActor in self?.resume() }
+            return .success
+        }
+
+        center.pauseCommand.addTarget { [weak self] _ in
+            Task { @MainActor in self?.pause() }
+            return .success
+        }
+
+        center.togglePlayPauseCommand.addTarget { [weak self] _ in
+            Task { @MainActor in self?.togglePlayPause() }
+            return .success
+        }
+
+        center.changePlaybackPositionCommand.addTarget { [weak self] event in
+            guard let event = event as? MPChangePlaybackPositionCommandEvent else {
+                return .commandFailed
+            }
+            Task { @MainActor in self?.seek(to: event.positionTime) }
+            return .success
+        }
+
+        center.skipForwardCommand.preferredIntervals = [15]
+        center.skipForwardCommand.addTarget { [weak self] event in
+            guard let event = event as? MPSkipIntervalCommandEvent else {
+                return .commandFailed
+            }
+            Task { @MainActor in
+                guard let self else { return }
+                self.seek(to: self.currentTime + event.interval)
+            }
+            return .success
+        }
+
+        center.skipBackwardCommand.preferredIntervals = [15]
+        center.skipBackwardCommand.addTarget { [weak self] event in
+            guard let event = event as? MPSkipIntervalCommandEvent else {
+                return .commandFailed
+            }
+            Task { @MainActor in
+                guard let self else { return }
+                self.seek(to: max(0, self.currentTime - event.interval))
+            }
+            return .success
+        }
+    }
+
+    // MARK: - Now Playing Info
+
+    func updateNowPlayingInfo() {
+        var info: [String: Any] = [
+            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.video.rawValue,
+            MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: currentTime,
+            MPMediaItemPropertyPlaybackDuration: duration,
+        ]
+
+        if let item = currentItem {
+            info[MPMediaItemPropertyTitle] = item.title
+            info[MPMediaItemPropertyArtist] = item.source.rawValue.capitalized
+        }
+
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+    }
+
+    private func updateNowPlayingElapsedTime() {
+        guard MPNowPlayingInfoCenter.default().nowPlayingInfo != nil else { return }
+        MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+        MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyPlaybackDuration] = duration
+    }
+
+    private func clearNowPlayingInfo() {
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+    }
+
+    // MARK: - Interruption Handling
 
     private func setupInterruptionHandling() {
         NotificationCenter.default.addObserver(
