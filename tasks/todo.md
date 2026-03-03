@@ -135,7 +135,8 @@
 | 1.0.0+0 | 822f850 | Initial Commit — full project scaffold |
 | 1.0.0+1 | 08a75a1 | Plex Link Code auth & player registration |
 | 1.0.0+2 | 8a43700 | Transport controls, now playing UI, idle gating |
-| 1.0.0+3 | 7438fa3 | Fix onOpenURL handler, simulator testing pass |
+| 1.0.0+3 | 1f8b803 | Fix onOpenURL handler, simulator testing pass |
+| 1.0.0+4 | 461df4d | Fix app icon: add Resources build phase for Assets.xcassets |
 
 ---
 
@@ -184,3 +185,10 @@
   - Theme: Color/Font extensions load correctly ✅
   - CarPlaySceneDelegate: static isConnected state ✅
 - Clean build with zero warnings
+
+### v1.0.0+4 Review
+- Fixed app icon not showing: Assets.xcassets was in the project but missing from build phases
+- Added PBXResourcesBuildPhase with Assets.xcassets to idle target (done via Xcode UI)
+- Verified Assets.car now included in app bundle (781KB compiled asset catalog)
+- Confirmed icon renders correctly on iPhone home screen (tachometer gauge with amber accent)
+- CarPlay uses same AppIcon from asset catalog — no separate icon needed

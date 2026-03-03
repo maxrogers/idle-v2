@@ -12,6 +12,7 @@
 		2CE5FC2D8E2DEA734884EC81 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0084A3B3C84042DB79C73A31 /* ContentView.swift */; };
 		2D95AD6F33F136A6527CF630 /* PlaybackEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9339AB5DA747F72AB1D280 /* PlaybackEngine.swift */; };
 		419CA118BC6E9A28FFA53C90 /* ServicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6008EDD3192394929660078 /* ServicesView.swift */; };
+		55D8162A2F57264B0082B646 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 55530E7E2F5695DD001776FA /* Assets.xcassets */; };
 		56BB61C2E5171AB8642E44FC /* YouTubeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D03B917D86DB9C7DE43ED5E3 /* YouTubeService.swift */; };
 		60DBAA58B119E415F043EDE8 /* IdleDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADBB38396D5B11194C132AA7 /* IdleDetector.swift */; };
 		645E9FEE2CA21E1062C88DA6 /* ServiceRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC8A4306581F64498C449E8 /* ServiceRegistry.swift */; };
@@ -192,6 +193,7 @@
 			buildConfigurationList = E0010CD6FE994544FE3513B5 /* Build configuration list for PBXNativeTarget "idle" */;
 			buildPhases = (
 				192EFA3AB787940A7A1C384E /* Sources */,
+				55D816292F5726160082B646 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -230,6 +232,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		55D816292F5726160082B646 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				55D8162A2F57264B0082B646 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		192EFA3AB787940A7A1C384E /* Sources */ = {
