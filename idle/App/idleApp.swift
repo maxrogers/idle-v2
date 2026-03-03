@@ -8,6 +8,9 @@ struct idleApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.dark)
+                .onOpenURL { url in
+                    URLSchemeHandler.shared.handle(url: url)
+                }
         }
     }
 }

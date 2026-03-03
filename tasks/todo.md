@@ -134,7 +134,8 @@
 |---------|--------|-------------|
 | 1.0.0+0 | 822f850 | Initial Commit — full project scaffold |
 | 1.0.0+1 | 08a75a1 | Plex Link Code auth & player registration |
-| 1.0.0+2 | e8fa735 | Transport controls, now playing UI, idle gating |
+| 1.0.0+2 | 8a43700 | Transport controls, now playing UI, idle gating |
+| 1.0.0+3 | 7438fa3 | Fix onOpenURL handler, simulator testing pass |
 
 ---
 
@@ -162,3 +163,24 @@
 - Integrated IdleDetector with CarPlay playback — blocks video when vehicle is moving
 - Note: CPNowPlayingTemplate requires audio entitlement; we have navigation. Remote
   commands still work via MPRemoteCommandCenter for lock screen and accessories.
+
+### v1.0.0+3 Review
+- Fixed bug: `onOpenURL` handler missing in idleApp.swift — URLs never reached URLSchemeHandler
+- Simulator testing on iPhone 17 Pro Max (iOS 26.4):
+  - App launches, dark theme, amber accent, Queue empty state ✅
+  - URL scheme `idle://play?url=...` triggers system dialog and processes correctly ✅
+  - `simctl openurl` sends URLs to app successfully ✅
+- ExecuteSnippet functional tests all passed:
+  - URLSchemeHandler: valid/invalid URLs, title parsing, queue insertion ✅
+  - VideoItem: creation, sources, extraction status ✅
+  - YouTubeExtractor: 4 URL format patterns parsed correctly ✅
+  - ExtractionRouter: YouTube, direct, Plex, generic routing ✅
+  - PlexHeaders: all 9 headers including X-Plex-Provides: player ✅
+  - PlexConfig/PlexPIN/PlexResource: encode/decode roundtrips ✅
+  - PlaybackEngine: singleton, state management ✅
+  - IdleDetector: defaults to idle (stationary) in simulator ✅
+  - ServiceRegistry: Plex + YouTube registered, lookup works ✅
+  - PlayOnCarPlayIntent: AppIntent structure valid ✅
+  - Theme: Color/Font extensions load correctly ✅
+  - CarPlaySceneDelegate: static isConnected state ✅
+- Clean build with zero warnings
