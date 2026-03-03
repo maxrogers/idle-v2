@@ -1,0 +1,66 @@
+name: idle
+options:
+  bundleIdPrefix: com.idle
+  deploymentTarget:
+    iOS: "18.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    INFOPLIST_FILE: idle/Info.plist
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  idle:
+    type: application
+    platform: iOS
+    sources:
+      - path: idle
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.idle.app
+        INFOPLIST_FILE: idle/Info.plist
+        CODE_SIGN_ENTITLEMENTS: idle/idle.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGNING_ALLOWED: "NO"
+        SWIFT_STRICT_CONCURRENCY: "minimal"
+    entitlements:
+      path: idle/idle.entitlements
+      properties:
+        com.apple.developer.carplay-maps: true
+        com.apple.security.application-groups:
+          - group.com.idle.shared
+    info:
+      path: idle/Info.plist
+      properties:
+        CFBundleDisplayName: idle
+        CFBundleName: idle
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: iPhone
+                UISceneDelegateClassName: "$(PRODUCT_MODULE_NAME).AppDelegate"
+            CPTemplateApplicationSceneSessionRoleApplication:
+              - UISceneConfigurationName: CarPlay
+                UISceneClassName: CPTemplateApplicationScene
+                UISceneDelegateClassName: "$(PRODUCT_MODULE_NAME).CarPlaySceneDelegate"
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - idle
+            CFBundleURLName: com.idle.app
+        UIBackgroundModes:
+          - audio
+          - fetch
+        NSMotionUsageDescription: "idle uses motion data to detect when your vehicle is stopped, ensuring video only plays when it's safe."

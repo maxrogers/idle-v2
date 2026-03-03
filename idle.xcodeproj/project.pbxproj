@@ -1,0 +1,461 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 63;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0081965503C2E83DF8C32D77 /* PlexService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82C0C16A1AEA0AA7AFDA1190 /* PlexService.swift */; };
+		18562F0E9B17DDA0A5CDF7AF /* ExtractionRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37B5353F679F21F33E6E273 /* ExtractionRouter.swift */; };
+		2CE5FC2D8E2DEA734884EC81 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0084A3B3C84042DB79C73A31 /* ContentView.swift */; };
+		2D95AD6F33F136A6527CF630 /* PlaybackEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9339AB5DA747F72AB1D280 /* PlaybackEngine.swift */; };
+		419CA118BC6E9A28FFA53C90 /* ServicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6008EDD3192394929660078 /* ServicesView.swift */; };
+		56BB61C2E5171AB8642E44FC /* YouTubeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D03B917D86DB9C7DE43ED5E3 /* YouTubeService.swift */; };
+		60DBAA58B119E415F043EDE8 /* IdleDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADBB38396D5B11194C132AA7 /* IdleDetector.swift */; };
+		645E9FEE2CA21E1062C88DA6 /* ServiceRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC8A4306581F64498C449E8 /* ServiceRegistry.swift */; };
+		757E34AED9BFE3D75D1AD353 /* YouTubeExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D71955832BDA698067C98D4 /* YouTubeExtractor.swift */; };
+		7B57F6A656F5E84D29237DB3 /* VideoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2235B145FD8F54639E23E8B /* VideoService.swift */; };
+		93985C9DEE34DCF261FA11C5 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAD7D399982ABBF9B48E20C9 /* Theme.swift */; };
+		A873B5E15D4AEBC138240A0B /* URLSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934D6581CC448D5B5F8C3BFF /* URLSchemeHandler.swift */; };
+		C19910494C4A10E47E604002 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07C80122684DEA46C7CCC1BD /* AppDelegate.swift */; };
+		C52B76A88E6E39F69BD215DB /* GenericExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C96B820C8A3C019F7BE52A0 /* GenericExtractor.swift */; };
+		C81A4B9029D60E843065BEAD /* QueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C33940B70DA20A16ABCDC852 /* QueueView.swift */; };
+		CD1E23CFAFC2191AC0F6854C /* CarPlayVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AD1C9458E149C5A5A2D20D5 /* CarPlayVideoViewController.swift */; };
+		D3C682A0372F56426ADAA3EE /* PlexExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AECF9157A7C3DB422CEE28 /* PlexExtractor.swift */; };
+		DE876575002AE240F6682953 /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFABA7670217528459638A08 /* CarPlaySceneDelegate.swift */; };
+		DEFB5D6B4FAB8B9728BCB68E /* PlayOnCarPlayIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6256117AC3831C27D0E6213B /* PlayOnCarPlayIntent.swift */; };
+		E2F518983CBA9D708F3DE5A5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30849494BAD242189CC8543 /* SettingsView.swift */; };
+		E54037EFD9A9A41022C4AD22 /* idleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D848B2A47EC22C3B24653716 /* idleApp.swift */; };
+		F695F5F4C5985BF6D74332EA /* QueueManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFC8391A3B9644A3A0750D38 /* QueueManager.swift */; };
+		FEB8BE6D0BFC51132954B593 /* VideoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293A672914C2AB0FE0EAC76B /* VideoItem.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0084A3B3C84042DB79C73A31 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		07C80122684DEA46C7CCC1BD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		16AECF9157A7C3DB422CEE28 /* PlexExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlexExtractor.swift; sourceTree = "<group>"; };
+		1AD1C9458E149C5A5A2D20D5 /* CarPlayVideoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayVideoViewController.swift; sourceTree = "<group>"; };
+		293A672914C2AB0FE0EAC76B /* VideoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoItem.swift; sourceTree = "<group>"; };
+		2D71955832BDA698067C98D4 /* YouTubeExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeExtractor.swift; sourceTree = "<group>"; };
+		362BE61C4A891456E73A3CC0 /* idle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = idle.entitlements; sourceTree = "<group>"; };
+		3A9339AB5DA747F72AB1D280 /* PlaybackEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackEngine.swift; sourceTree = "<group>"; };
+		55530E7E2F5695DD001776FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		6256117AC3831C27D0E6213B /* PlayOnCarPlayIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayOnCarPlayIntent.swift; sourceTree = "<group>"; };
+		7C96B820C8A3C019F7BE52A0 /* GenericExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericExtractor.swift; sourceTree = "<group>"; };
+		7EC8A4306581F64498C449E8 /* ServiceRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceRegistry.swift; sourceTree = "<group>"; };
+		82C0C16A1AEA0AA7AFDA1190 /* PlexService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlexService.swift; sourceTree = "<group>"; };
+		934D6581CC448D5B5F8C3BFF /* URLSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSchemeHandler.swift; sourceTree = "<group>"; };
+		ADBB38396D5B11194C132AA7 /* IdleDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdleDetector.swift; sourceTree = "<group>"; };
+		B37B5353F679F21F33E6E273 /* ExtractionRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtractionRouter.swift; sourceTree = "<group>"; };
+		C33940B70DA20A16ABCDC852 /* QueueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueView.swift; sourceTree = "<group>"; };
+		C3D845EEEB198227C3F9CA0D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		CAD7D399982ABBF9B48E20C9 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		D03B917D86DB9C7DE43ED5E3 /* YouTubeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeService.swift; sourceTree = "<group>"; };
+		D848B2A47EC22C3B24653716 /* idleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = idleApp.swift; sourceTree = "<group>"; };
+		E2235B145FD8F54639E23E8B /* VideoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoService.swift; sourceTree = "<group>"; };
+		E30849494BAD242189CC8543 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		EFC8391A3B9644A3A0750D38 /* QueueManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueManager.swift; sourceTree = "<group>"; };
+		F3F7371C2F43CA8EC0946AB2 /* idle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = idle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F6008EDD3192394929660078 /* ServicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicesView.swift; sourceTree = "<group>"; };
+		FFABA7670217528459638A08 /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0775D059965A96118883633B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F3F7371C2F43CA8EC0946AB2 /* idle.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		10826645E1D639AFC58B8F01 = {
+			isa = PBXGroup;
+			children = (
+				DA2CB72666F8E94BA1B10C41 /* idle */,
+				0775D059965A96118883633B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		403A03E20080A6A8FA2F1542 /* Extraction */ = {
+			isa = PBXGroup;
+			children = (
+				B37B5353F679F21F33E6E273 /* ExtractionRouter.swift */,
+				7C96B820C8A3C019F7BE52A0 /* GenericExtractor.swift */,
+				16AECF9157A7C3DB422CEE28 /* PlexExtractor.swift */,
+				2D71955832BDA698067C98D4 /* YouTubeExtractor.swift */,
+			);
+			path = Extraction;
+			sourceTree = "<group>";
+		};
+		51E253A9B893BCD030FA0722 /* CarPlay */ = {
+			isa = PBXGroup;
+			children = (
+				FFABA7670217528459638A08 /* CarPlaySceneDelegate.swift */,
+				1AD1C9458E149C5A5A2D20D5 /* CarPlayVideoViewController.swift */,
+			);
+			path = CarPlay;
+			sourceTree = "<group>";
+		};
+		63971DC62CD76E2A61CBA305 /* Queue */ = {
+			isa = PBXGroup;
+			children = (
+				EFC8391A3B9644A3A0750D38 /* QueueManager.swift */,
+				293A672914C2AB0FE0EAC76B /* VideoItem.swift */,
+			);
+			path = Queue;
+			sourceTree = "<group>";
+		};
+		6AC87C84DE449F2212F26568 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				C33940B70DA20A16ABCDC852 /* QueueView.swift */,
+				F6008EDD3192394929660078 /* ServicesView.swift */,
+				E30849494BAD242189CC8543 /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		6B7551873D1ED7FE08070F74 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				6256117AC3831C27D0E6213B /* PlayOnCarPlayIntent.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
+		7FF62A23F61C3F0784E39885 /* Playback */ = {
+			isa = PBXGroup;
+			children = (
+				3A9339AB5DA747F72AB1D280 /* PlaybackEngine.swift */,
+			);
+			path = Playback;
+			sourceTree = "<group>";
+		};
+		9A4B8B7FF6869DA8F2D33CCE /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				82C0C16A1AEA0AA7AFDA1190 /* PlexService.swift */,
+				7EC8A4306581F64498C449E8 /* ServiceRegistry.swift */,
+				E2235B145FD8F54639E23E8B /* VideoService.swift */,
+				D03B917D86DB9C7DE43ED5E3 /* YouTubeService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		9C00A7077538305F4B114149 /* Detection */ = {
+			isa = PBXGroup;
+			children = (
+				ADBB38396D5B11194C132AA7 /* IdleDetector.swift */,
+			);
+			path = Detection;
+			sourceTree = "<group>";
+		};
+		9E9AE621E8578F21268D62A2 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				07C80122684DEA46C7CCC1BD /* AppDelegate.swift */,
+				0084A3B3C84042DB79C73A31 /* ContentView.swift */,
+				D848B2A47EC22C3B24653716 /* idleApp.swift */,
+				CAD7D399982ABBF9B48E20C9 /* Theme.swift */,
+				934D6581CC448D5B5F8C3BFF /* URLSchemeHandler.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		DA2CB72666F8E94BA1B10C41 /* idle */ = {
+			isa = PBXGroup;
+			children = (
+				55530E7E2F5695DD001776FA /* Assets.xcassets */,
+				362BE61C4A891456E73A3CC0 /* idle.entitlements */,
+				C3D845EEEB198227C3F9CA0D /* Info.plist */,
+				9E9AE621E8578F21268D62A2 /* App */,
+				51E253A9B893BCD030FA0722 /* CarPlay */,
+				9C00A7077538305F4B114149 /* Detection */,
+				403A03E20080A6A8FA2F1542 /* Extraction */,
+				6B7551873D1ED7FE08070F74 /* Intents */,
+				7FF62A23F61C3F0784E39885 /* Playback */,
+				63971DC62CD76E2A61CBA305 /* Queue */,
+				9A4B8B7FF6869DA8F2D33CCE /* Services */,
+				6AC87C84DE449F2212F26568 /* Views */,
+			);
+			path = idle;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		917091C8E46B9502EDE3C845 /* idle */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E0010CD6FE994544FE3513B5 /* Build configuration list for PBXNativeTarget "idle" */;
+			buildPhases = (
+				192EFA3AB787940A7A1C384E /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = idle;
+			packageProductDependencies = (
+			);
+			productName = idle;
+			productReference = F3F7371C2F43CA8EC0946AB2 /* idle.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		EF111C1E0A3C9C8E3DEA7409 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+			};
+			buildConfigurationList = 46D880858231DD5B97056BB2 /* Build configuration list for PBXProject "idle" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 10826645E1D639AFC58B8F01;
+			minimizedProjectReferenceProxies = 1;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				917091C8E46B9502EDE3C845 /* idle */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		192EFA3AB787940A7A1C384E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C19910494C4A10E47E604002 /* AppDelegate.swift in Sources */,
+				DE876575002AE240F6682953 /* CarPlaySceneDelegate.swift in Sources */,
+				CD1E23CFAFC2191AC0F6854C /* CarPlayVideoViewController.swift in Sources */,
+				2CE5FC2D8E2DEA734884EC81 /* ContentView.swift in Sources */,
+				18562F0E9B17DDA0A5CDF7AF /* ExtractionRouter.swift in Sources */,
+				C52B76A88E6E39F69BD215DB /* GenericExtractor.swift in Sources */,
+				60DBAA58B119E415F043EDE8 /* IdleDetector.swift in Sources */,
+				DEFB5D6B4FAB8B9728BCB68E /* PlayOnCarPlayIntent.swift in Sources */,
+				2D95AD6F33F136A6527CF630 /* PlaybackEngine.swift in Sources */,
+				D3C682A0372F56426ADAA3EE /* PlexExtractor.swift in Sources */,
+				0081965503C2E83DF8C32D77 /* PlexService.swift in Sources */,
+				F695F5F4C5985BF6D74332EA /* QueueManager.swift in Sources */,
+				C81A4B9029D60E843065BEAD /* QueueView.swift in Sources */,
+				645E9FEE2CA21E1062C88DA6 /* ServiceRegistry.swift in Sources */,
+				419CA118BC6E9A28FFA53C90 /* ServicesView.swift in Sources */,
+				E2F518983CBA9D708F3DE5A5 /* SettingsView.swift in Sources */,
+				93985C9DEE34DCF261FA11C5 /* Theme.swift in Sources */,
+				A873B5E15D4AEBC138240A0B /* URLSchemeHandler.swift in Sources */,
+				FEB8BE6D0BFC51132954B593 /* VideoItem.swift in Sources */,
+				7B57F6A656F5E84D29237DB3 /* VideoService.swift in Sources */,
+				757E34AED9BFE3D75D1AD353 /* YouTubeExtractor.swift in Sources */,
+				56BB61C2E5171AB8642E44FC /* YouTubeService.swift in Sources */,
+				E54037EFD9A9A41022C4AD22 /* idleApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		7083AC05C3B4BF60096207A3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_ENTITLEMENTS = idle/idle.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				INFOPLIST_FILE = idle/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.idle.app;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		AB002E459DBFB687CFBCF9CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 94Y5JF4987;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = idle/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		DAD613FC95C9FF09F0837FFB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_ENTITLEMENTS = idle/idle.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				INFOPLIST_FILE = idle/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.idle.app;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DB6A93B0CA5AE3177AD4FA94 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 94Y5JF4987;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = idle/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		46D880858231DD5B97056BB2 /* Build configuration list for PBXProject "idle" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DB6A93B0CA5AE3177AD4FA94 /* Debug */,
+				AB002E459DBFB687CFBCF9CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E0010CD6FE994544FE3513B5 /* Build configuration list for PBXNativeTarget "idle" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DAD613FC95C9FF09F0837FFB /* Debug */,
+				7083AC05C3B4BF60096207A3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = EF111C1E0A3C9C8E3DEA7409 /* Project object */;
+}
