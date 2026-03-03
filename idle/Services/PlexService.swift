@@ -1,15 +1,216 @@
 import UIKit
 import Foundation
 
-/// Plex configuration stored in Keychain/UserDefaults.
-struct PlexConfig: Codable {
-    var serverURL: String   // e.g., "http://192.168.1.100:32400"
-    var token: String       // X-Plex-Token
-    var serverName: String? // Friendly name
+// MARK: - Plex Headers
+
+/// Standard headers required for all Plex API requests.
+/// Including `X-Plex-Provides: player` registers idle as a Plex player device.
+enum PlexHeaders {
+    static let clientIdentifier: String = {
+        let key = "idle_plex_client_id"
+        if let existing = UserDefaults.standard.string(forKey: key) {
+            return existing
+        }
+        let id = UUID().uuidString
+        UserDefaults.standard.set(id, forKey: key)
+        return id
+    }()
+
+    static let product = "idle"
+    static let version = "1.0.0"
+    static let platform = "iOS"
+    static let device = "iPhone"
+
+    static func apply(to request: inout URLRequest, token: String? = nil) {
+        request.setValue(clientIdentifier, forHTTPHeaderField: "X-Plex-Client-Identifier")
+        request.setValue(product, forHTTPHeaderField: "X-Plex-Product")
+        request.setValue(version, forHTTPHeaderField: "X-Plex-Version")
+        request.setValue(platform, forHTTPHeaderField: "X-Plex-Platform")
+        request.setValue(device, forHTTPHeaderField: "X-Plex-Device")
+        request.setValue(product, forHTTPHeaderField: "X-Plex-Device-Name")
+        request.setValue("player", forHTTPHeaderField: "X-Plex-Provides")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let token {
+            request.setValue(token, forHTTPHeaderField: "X-Plex-Token")
+        }
+    }
 }
 
-/// Plex video service integration.
-/// Provides library browsing and direct stream URL construction.
+// MARK: - Stored Config
+
+/// Plex configuration stored in UserDefaults.
+struct PlexConfig: Codable {
+    /// The user's plex.tv auth token (from PIN flow).
+    var authToken: String
+
+    /// Selected server's access token (may differ from authToken for shared servers).
+    var serverAccessToken: String
+
+    /// Selected server connection URL, e.g. "https://192-168-1-100.abc123.plex.direct:32400"
+    var serverURL: String
+
+    /// Friendly server name.
+    var serverName: String
+
+    /// Server machine identifier.
+    var machineIdentifier: String
+}
+
+// MARK: - PIN Auth Models
+
+struct PlexPIN: Codable {
+    let id: Int
+    let code: String
+    let authToken: String?
+    let expiresAt: String?
+}
+
+// MARK: - Resource Models
+
+struct PlexResource: Codable {
+    let name: String
+    let provides: String
+    let clientIdentifier: String
+    let accessToken: String?
+    let owned: Bool?
+    let connections: [PlexConnection]?
+}
+
+struct PlexConnection: Codable {
+    let uri: String
+    let local: Bool?
+}
+
+// MARK: - PIN Authentication Manager
+
+/// Handles the Plex Link Code (PIN) authentication flow.
+/// 1. POST /api/v2/pins → get a 4-char code
+/// 2. User visits plex.tv/link and enters the code
+/// 3. Poll GET /api/v2/pins/{id} until authToken is returned
+@MainActor
+final class PlexPINAuth: ObservableObject {
+
+    enum AuthState: Equatable {
+        case idle
+        case waitingForUser(code: String)
+        case polling
+        case authenticated(token: String)
+        case failed(String)
+    }
+
+    @Published var state: AuthState = .idle
+
+    private var pinID: Int?
+    private var pollTask: Task<Void, Never>?
+
+    /// Start the PIN auth flow: request a new PIN and begin polling.
+    func startAuth() {
+        state = .polling
+        pollTask?.cancel()
+
+        pollTask = Task {
+            do {
+                // Step 1: Request a PIN
+                let pin = try await requestPIN()
+                pinID = pin.id
+                state = .waitingForUser(code: pin.code)
+
+                // Step 2: Poll for auth token
+                let token = try await pollForToken(pinID: pin.id, code: pin.code)
+                state = .authenticated(token: token)
+            } catch is CancellationError {
+                // Cancelled — no state change needed
+            } catch {
+                state = .failed(error.localizedDescription)
+            }
+        }
+    }
+
+    func cancel() {
+        pollTask?.cancel()
+        pollTask = nil
+        state = .idle
+    }
+
+    // MARK: - API Calls
+
+    private func requestPIN() async throws -> PlexPIN {
+        var request = URLRequest(url: URL(string: "https://plex.tv/api/v2/pins")!)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        PlexHeaders.apply(to: &request)
+        request.httpBody = "strong=true".data(using: .utf8)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 201 || http.statusCode == 200 else {
+            throw PlexError.authenticationFailed
+        }
+        return try JSONDecoder().decode(PlexPIN.self, from: data)
+    }
+
+    private func pollForToken(pinID: Int, code: String) async throws -> String {
+        let maxAttempts = 180  // ~3 minutes at 1s intervals
+        for _ in 0..<maxAttempts {
+            try Task.checkCancellation()
+            try await Task.sleep(for: .seconds(1))
+
+            var request = URLRequest(url: URL(string: "https://plex.tv/api/v2/pins/\(pinID)")!)
+            request.httpMethod = "GET"
+            PlexHeaders.apply(to: &request)
+
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let pin = try JSONDecoder().decode(PlexPIN.self, from: data)
+
+            if let token = pin.authToken, !token.isEmpty {
+                return token
+            }
+        }
+
+        throw PlexError.authenticationTimedOut
+    }
+}
+
+// MARK: - Server Discovery
+
+/// After authentication, fetches the user's Plex servers.
+enum PlexServerDiscovery {
+
+    static func fetchServers(token: String) async throws -> [PlexResource] {
+        var request = URLRequest(url: URL(string: "https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=1")!)
+        PlexHeaders.apply(to: &request, token: token)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw PlexError.authenticationFailed
+        }
+
+        let resources = try JSONDecoder().decode([PlexResource].self, from: data)
+
+        // Filter to owned servers that provide "server"
+        return resources.filter { resource in
+            resource.provides.contains("server")
+        }
+    }
+
+    /// Pick the best connection URL for a server, preferring non-local HTTPS.
+    static func bestConnectionURL(for server: PlexResource) -> String? {
+        // Prefer remote HTTPS connections
+        if let remote = server.connections?.first(where: { !($0.local ?? false) && $0.uri.hasPrefix("https") }) {
+            return remote.uri
+        }
+        // Then any HTTPS
+        if let https = server.connections?.first(where: { $0.uri.hasPrefix("https") }) {
+            return https.uri
+        }
+        // Fallback to first available
+        return server.connections?.first?.uri
+    }
+}
+
+// MARK: - Plex Service
+
+/// Plex video service integration using Link Code (PIN) authentication.
+/// Registers idle as a Plex player device via X-Plex-Provides headers.
 final class PlexService: VideoService {
     let id = "plex"
     let name = "Plex"
@@ -28,14 +229,18 @@ final class PlexService: VideoService {
     // MARK: - Authentication
 
     func authenticate() async throws {
-        // Authentication is handled via the iPhone settings UI.
-        // This method validates the stored config by hitting the server.
         guard let config = Self.loadStoredConfig() else {
             throw PlexError.notConfigured
         }
 
-        let url = URL(string: "\(config.serverURL)/identity?X-Plex-Token=\(config.token)")!
-        let (_, response) = try await URLSession.shared.data(from: url)
+        // Validate by hitting the server identity endpoint
+        guard let url = URL(string: "\(config.serverURL)/identity") else {
+            throw PlexError.authenticationFailed
+        }
+        var request = URLRequest(url: url)
+        PlexHeaders.apply(to: &request, token: config.serverAccessToken)
+
+        let (_, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw PlexError.authenticationFailed
         }
@@ -53,10 +258,14 @@ final class PlexService: VideoService {
     func fetchCategories() async throws -> [ContentCategory] {
         guard let config = config else { throw PlexError.notConfigured }
 
-        let url = URL(string: "\(config.serverURL)/library/sections?X-Plex-Token=\(config.token)")!
-        let (data, _) = try await URLSession.shared.data(from: url)
+        guard let url = URL(string: "\(config.serverURL)/library/sections") else {
+            throw PlexError.notConfigured
+        }
+        var request = URLRequest(url: url)
+        PlexHeaders.apply(to: &request, token: config.serverAccessToken)
 
-        // Parse XML response for library sections
+        let (data, _) = try await URLSession.shared.data(for: request)
+
         let parser = PlexXMLParser()
         let sections = parser.parseSections(data: data)
 
@@ -72,11 +281,16 @@ final class PlexService: VideoService {
     func fetchItems(for category: ContentCategory) async throws -> [VideoItem] {
         guard let config = config else { throw PlexError.notConfigured }
 
-        let url = URL(string: "\(config.serverURL)/library/sections/\(category.id)/all?X-Plex-Token=\(config.token)")!
-        let (data, _) = try await URLSession.shared.data(from: url)
+        guard let url = URL(string: "\(config.serverURL)/library/sections/\(category.id)/all") else {
+            throw PlexError.notConfigured
+        }
+        var request = URLRequest(url: url)
+        PlexHeaders.apply(to: &request, token: config.serverAccessToken)
+
+        let (data, _) = try await URLSession.shared.data(for: request)
 
         let parser = PlexXMLParser()
-        let items = parser.parseItems(data: data, serverURL: config.serverURL, token: config.token)
+        let items = parser.parseItems(data: data, serverURL: config.serverURL, token: config.serverAccessToken)
 
         return items.map { plexItem in
             VideoItem(
@@ -93,11 +307,16 @@ final class PlexService: VideoService {
         guard let config = config else { throw PlexError.notConfigured }
 
         let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
-        let url = URL(string: "\(config.serverURL)/search?query=\(encodedQuery)&X-Plex-Token=\(config.token)")!
-        let (data, _) = try await URLSession.shared.data(from: url)
+        guard let url = URL(string: "\(config.serverURL)/search?query=\(encodedQuery)") else {
+            throw PlexError.notConfigured
+        }
+        var request = URLRequest(url: url)
+        PlexHeaders.apply(to: &request, token: config.serverAccessToken)
+
+        let (data, _) = try await URLSession.shared.data(for: request)
 
         let parser = PlexXMLParser()
-        let items = parser.parseItems(data: data, serverURL: config.serverURL, token: config.token)
+        let items = parser.parseItems(data: data, serverURL: config.serverURL, token: config.serverAccessToken)
 
         return items.map { plexItem in
             VideoItem(
@@ -136,13 +355,17 @@ final class PlexService: VideoService {
 enum PlexError: LocalizedError {
     case notConfigured
     case authenticationFailed
+    case authenticationTimedOut
     case noStreamURL
+    case noServersFound
 
     var errorDescription: String? {
         switch self {
-        case .notConfigured: return "Plex server not configured"
-        case .authenticationFailed: return "Could not connect to Plex server"
+        case .notConfigured: return "Plex not configured"
+        case .authenticationFailed: return "Could not connect to Plex"
+        case .authenticationTimedOut: return "Authentication timed out"
         case .noStreamURL: return "No stream URL available"
+        case .noServersFound: return "No Plex servers found on your account"
         }
     }
 }

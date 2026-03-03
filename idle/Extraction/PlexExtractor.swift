@@ -21,7 +21,7 @@ final class PlexExtractor: Sendable {
             throw ExtractionError.extractionFailed("Plex server not configured. Add your server in Settings.")
         }
 
-        let streamURL = "\(config.serverURL)/library/metadata/\(metadataKey)/file?X-Plex-Token=\(config.token)"
+        let streamURL = "\(config.serverURL)/library/metadata/\(metadataKey)/file?X-Plex-Token=\(config.serverAccessToken)"
         guard let url = URL(string: streamURL) else {
             throw ExtractionError.extractionFailed("Invalid Plex stream URL")
         }
