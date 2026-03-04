@@ -258,10 +258,10 @@ struct PlexSettingsView: View {
                         .font(.idleHeadline)
                         .foregroundColor(.idleAmber)
 
-                    // Code display
+                    // Code display — use indexed ForEach to avoid duplicate character IDs
                     HStack(spacing: 12) {
-                        ForEach(Array(code), id: \.self) { char in
-                            Text(String(char))
+                        ForEach(Array(code.enumerated()), id: \.offset) { index, char in
+                            Text(String(char).uppercased())
                                 .font(.system(size: 36, weight: .bold, design: .monospaced))
                                 .foregroundColor(.white)
                                 .frame(width: 52, height: 64)

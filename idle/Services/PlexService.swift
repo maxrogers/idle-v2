@@ -139,7 +139,7 @@ final class PlexPINAuth: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         PlexHeaders.apply(to: &request)
-        request.httpBody = "strong=true".data(using: .utf8)
+        request.httpBody = "strong=false".data(using: .utf8)
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 201 || http.statusCode == 200 else {

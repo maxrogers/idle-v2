@@ -136,7 +136,8 @@
 | 1.0.0+1 | 08a75a1 | Plex Link Code auth & player registration |
 | 1.0.0+2 | 8a43700 | Transport controls, now playing UI, idle gating |
 | 1.0.0+3 | 1f8b803 | Fix onOpenURL handler, simulator testing pass |
-| 1.0.0+4 | 461df4d | Fix app icon: add Resources build phase for Assets.xcassets |
+| 1.0.0+4 | af4c8a2 | Fix app icon: add Resources build phase for Assets.xcassets |
+| 1.0.0+5 | f7da99c | Switch to carplay-audio entitlement, enable automatic signing |
 
 ---
 
@@ -192,3 +193,21 @@
 - Verified Assets.car now included in app bundle (781KB compiled asset catalog)
 - Confirmed icon renders correctly on iPhone home screen (tachometer gauge with amber accent)
 - CarPlay uses same AppIcon from asset catalog — no separate icon needed
+
+### v1.0.0+5 Review
+- Switched CarPlay entitlement from `carplay-maps` to `carplay-audio`
+  - `carplay-maps` (navigation) was blocking automatic provisioning profile generation
+  - `carplay-audio` enables automatic signing + access to CPNowPlayingTemplate
+  - No public `carplay-video` entitlement exists; iOS 26.4 CarPlay video uses AirPlay routing
+- Rewrote CarPlaySceneDelegate for audio app approach (templates only, no CPWindow)
+  - Removed Path A (CPWindow custom drawing surface) entirely
+  - Uses `templateApplicationScene(_:didConnect:)` without CPWindow parameter
+  - Added CPNowPlayingTemplate.shared as a tab with CPNowPlayingTemplateObserver
+  - Auto-pushes Now Playing template when playback starts
+- Deleted CarPlayVideoViewController (not needed without CPWindow)
+- Added `isExternalPlaybackActive` property to PlaybackEngine for AirPlay status
+- Enabled code signing: automatic signing, team 94Y5JF4987, Apple Development identity
+- Updated bundle ID to `com.steverogers.idle.app` in pbxproj (both Debug and Release)
+- Fixed app group ID to `group.com.steverogers.idle.shared` in QueueManager
+- Fixed CFBundleURLName to `com.steverogers.idle.app` in Info.plist
+- Clean build with zero warnings

@@ -23,8 +23,20 @@ struct QueueView: View {
                     }
                 }
             }
-            .navigationTitle("idle")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 8) {
+                        Image("IdleLogo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 28, height: 28)
+                            .clipShape(RoundedRectangle(cornerRadius: 7))
+                        Text("idle")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                }
                 if playback.isPlaying {
                     ToolbarItem(placement: .topBarTrailing) {
                         nowPlayingBadge

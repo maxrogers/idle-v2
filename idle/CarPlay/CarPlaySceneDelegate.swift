@@ -36,14 +36,12 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     private func setupTemplates(interfaceController: CPInterfaceController) {
         let queueTab = buildQueueTab()
 
+        // Audio apps only allow CPListTemplate and CPGridTemplate as tab roots.
+        // CPNowPlayingTemplate must be pushed onto a tab's navigation stack, not used as a tab root.
         var tabs: [CPTemplate] = [queueTab]
 
-        // Add Now Playing tab (audio entitlement exclusive)
-        let nowPlaying = CPNowPlayingTemplate.shared
-        nowPlaying.add(self)
-        nowPlaying.tabTitle = "Now Playing"
-        nowPlaying.tabImage = UIImage(systemName: "play.circle.fill")
-        tabs.append(nowPlaying)
+        // Register as now-playing observer for up-next/album-artist button taps
+        CPNowPlayingTemplate.shared.add(self)
 
         // Service tabs appear only when authenticated
         let services = ServiceRegistry.shared.authenticatedServices
