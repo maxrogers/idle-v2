@@ -64,19 +64,23 @@ struct PlexConfig: Codable {
     /// Server machine identifier.
     var machineIdentifier: String
 
+    /// All available connection URLs for fallback.
+    var allConnectionURLs: [String]?
+
     /// Selected Plex Home user name (nil = admin account).
     var selectedUserName: String?
 
     /// Selected Plex Home user ID.
     var selectedUserID: Int?
 
-    init(authToken: String, userToken: String, serverAccessToken: String, serverURL: String, serverName: String, machineIdentifier: String, selectedUserName: String? = nil, selectedUserID: Int? = nil) {
+    init(authToken: String, userToken: String, serverAccessToken: String, serverURL: String, serverName: String, machineIdentifier: String, allConnectionURLs: [String]? = nil, selectedUserName: String? = nil, selectedUserID: Int? = nil) {
         self.authToken = authToken
         self.userToken = userToken
         self.serverAccessToken = serverAccessToken
         self.serverURL = serverURL
         self.serverName = serverName
         self.machineIdentifier = machineIdentifier
+        self.allConnectionURLs = allConnectionURLs
         self.selectedUserName = selectedUserName
         self.selectedUserID = selectedUserID
     }
@@ -89,6 +93,7 @@ struct PlexConfig: Codable {
         serverURL = try container.decode(String.self, forKey: .serverURL)
         serverName = try container.decode(String.self, forKey: .serverName)
         machineIdentifier = try container.decode(String.self, forKey: .machineIdentifier)
+        allConnectionURLs = try container.decodeIfPresent([String].self, forKey: .allConnectionURLs)
         selectedUserName = try container.decodeIfPresent(String.self, forKey: .selectedUserName)
         selectedUserID = try container.decodeIfPresent(Int.self, forKey: .selectedUserID)
     }
@@ -240,41 +245,25 @@ enum PlexServerDiscovery {
         }
     }
 
-    /// Pick the best reachable connection URL for a server.
-    /// Tries each connection with a quick health check, preferring non-local HTTPS.
-    static func bestConnectionURL(for server: PlexResource, token: String) async -> String? {
+    /// Pick the best connection URL for a server, preferring remote HTTPS.
+    static func bestConnectionURL(for server: PlexResource) -> String? {
         guard let connections = server.connections, !connections.isEmpty else { return nil }
 
-        // Sort: prefer remote HTTPS, then any HTTPS, then anything
-        let sorted = connections.sorted { a, b in
-            let aScore = (a.uri.hasPrefix("https") ? 2 : 0) + (!(a.local ?? false) ? 1 : 0)
-            let bScore = (b.uri.hasPrefix("https") ? 2 : 0) + (!(b.local ?? false) ? 1 : 0)
-            return aScore > bScore
+        // Prefer remote HTTPS connections
+        if let remote = connections.first(where: { !($0.local ?? false) && $0.uri.hasPrefix("https") }) {
+            return remote.uri
         }
-
-        // Quick connectivity test (3s timeout)
-        let testSession: URLSession = {
-            let config = URLSessionConfiguration.default
-            config.timeoutIntervalForRequest = 3
-            return URLSession(configuration: config)
-        }()
-
-        for conn in sorted {
-            guard let url = URL(string: "\(conn.uri)/identity") else { continue }
-            var request = URLRequest(url: url)
-            PlexHeaders.apply(to: &request, token: token)
-            do {
-                let (_, response) = try await testSession.data(for: request)
-                if let http = response as? HTTPURLResponse, http.statusCode == 200 {
-                    return conn.uri
-                }
-            } catch {
-                continue
-            }
+        // Then any HTTPS
+        if let https = connections.first(where: { $0.uri.hasPrefix("https") }) {
+            return https.uri
         }
+        // Fallback to first available (including HTTP)
+        return connections.first?.uri
+    }
 
-        // If none responded, fall back to first remote HTTPS (might work on device)
-        return sorted.first?.uri
+    /// All connection URLs for a server, for fallback during playback.
+    static func allConnectionURLs(for server: PlexResource) -> [String] {
+        server.connections?.map(\.uri) ?? []
     }
 }
 
@@ -445,19 +434,7 @@ final class PlexService: VideoService {
         guard let config = Self.loadStoredConfig() else {
             throw PlexError.notConfigured
         }
-
-        // Validate by hitting the server identity endpoint
-        guard let url = URL(string: "\(config.serverURL)/identity") else {
-            throw PlexError.authenticationFailed
-        }
-        var request = URLRequest(url: url)
-        PlexHeaders.apply(to: &request, token: config.serverAccessToken)
-
-        let (_, response) = try await Self.serverSession.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw PlexError.authenticationFailed
-        }
-
+        // Trust the stored config — server reachability is checked at connection time
         self.config = config
     }
 

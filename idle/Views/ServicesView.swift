@@ -499,24 +499,20 @@ struct PlexSettingsView: View {
 
     private func selectServer(_ server: PlexResource) {
         guard case .authenticated(let authToken) = pinAuth.state else { return }
-        isLoadingServers = true
         errorMessage = nil
 
+        guard let connectionURL = PlexServerDiscovery.bestConnectionURL(for: server) else {
+            errorMessage = "No connection available for this server."
+            return
+        }
+
+        // Store the pending server info and fetch home users
+        pendingServer = server
+        pendingServerURL = connectionURL
+
+        // Fetch home users to see if user selection is needed
+        isLoadingUsers = true
         Task {
-            let token = server.accessToken ?? authToken
-            guard let connectionURL = await PlexServerDiscovery.bestConnectionURL(for: server, token: token) else {
-                errorMessage = "Could not reach any connection for this server."
-                isLoadingServers = false
-                return
-            }
-
-            // Store the pending server info and fetch home users
-            pendingServer = server
-            pendingServerURL = connectionURL
-            isLoadingServers = false
-
-            // Fetch home users to see if user selection is needed
-            isLoadingUsers = true
             do {
                 let users = try await PlexHomeUserManager.fetchHomeUsers(token: authToken)
                 homeUsers = users
@@ -588,6 +584,7 @@ struct PlexSettingsView: View {
             serverURL: connectionURL,
             serverName: server.name,
             machineIdentifier: server.clientIdentifier,
+            allConnectionURLs: PlexServerDiscovery.allConnectionURLs(for: server),
             selectedUserName: userName,
             selectedUserID: userID
         )

@@ -1,9 +1,7 @@
 import UIKit
 import CarPlay
 
-class AppDelegate: UIResponder, UIApplicationDelegate, UIWindowSceneDelegate {
-
-    var window: UIWindow?
+class AppDelegate: NSObject, UIApplicationDelegate {
 
     func application(
         _ application: UIApplication,
@@ -19,9 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UIWindowSceneDelegate {
             return config
         }
 
-        return UISceneConfiguration(
-            name: "iPhone",
-            sessionRole: connectingSceneSession.role
-        )
+        // Let SwiftUI handle the iPhone window scene
+        return connectingSceneSession.configuration
     }
 }
