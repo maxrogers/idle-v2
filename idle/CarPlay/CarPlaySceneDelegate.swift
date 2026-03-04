@@ -111,19 +111,42 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         listTemplate.tabTitle = service.name
         listTemplate.tabImage = service.icon
 
-        // Load categories asynchronously
+        // For Plex, show watchlist; for others, show categories
         Task { @MainActor in
             do {
-                let categories = try await service.fetchCategories()
-                let items = categories.map { category in
-                    let item = CPListItem(text: category.name, detailText: nil)
-                    item.handler = { [weak self] _, completion in
-                        self?.showCategoryItems(service: service, category: category)
-                        completion()
+                if let plexService = service as? PlexService {
+                    let watchlistItems = try await plexService.fetchWatchlistItems()
+                    if watchlistItems.isEmpty {
+                        let emptyItem = CPListItem(text: "Watchlist empty", detailText: "Add items at plex.tv")
+                        listTemplate.updateSections([CPListSection(items: [emptyItem])])
+                    } else {
+                        let items = watchlistItems.map { videoItem in
+                            let item = CPListItem(
+                                text: videoItem.title,
+                                detailText: videoItem.streamURL != nil ? nil : "Not on server"
+                            )
+                            if videoItem.streamURL != nil {
+                                item.handler = { [weak self] _, completion in
+                                    self?.playFromService(service: service, item: videoItem)
+                                    completion()
+                                }
+                            }
+                            return item
+                        }
+                        listTemplate.updateSections([CPListSection(items: items, header: "Watchlist", sectionIndexTitle: nil)])
                     }
-                    return item
+                } else {
+                    let categories = try await service.fetchCategories()
+                    let items = categories.map { category in
+                        let item = CPListItem(text: category.name, detailText: nil)
+                        item.handler = { [weak self] _, completion in
+                            self?.showCategoryItems(service: service, category: category)
+                            completion()
+                        }
+                        return item
+                    }
+                    listTemplate.updateSections([CPListSection(items: items)])
                 }
-                listTemplate.updateSections([CPListSection(items: items)])
             } catch {
                 let errorItem = CPListItem(text: "Failed to load", detailText: error.localizedDescription)
                 listTemplate.updateSections([CPListSection(items: [errorItem])])

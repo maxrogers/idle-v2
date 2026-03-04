@@ -77,9 +77,15 @@ struct ServicesView: View {
 struct PlexSettingsView: View {
     @StateObject private var pinAuth = PlexPINAuth()
     @State private var servers: [PlexResource] = []
+    @State private var homeUsers: [PlexHomeUser] = []
     @State private var isLoadingServers = false
+    @State private var isLoadingUsers = false
     @State private var existingConfig: PlexConfig?
     @State private var errorMessage: String?
+    @State private var pendingServer: PlexResource?
+    @State private var pendingServerURL: String?
+    @State private var pinEntry: String = ""
+    @State private var selectedProtectedUser: PlexHomeUser?
 
     private var isConnected: Bool {
         existingConfig != nil
@@ -125,6 +131,15 @@ struct PlexSettingsView: View {
                     }
                 }
 
+                if let userName = config.selectedUserName {
+                    HStack {
+                        Text("User")
+                        Spacer()
+                        Text(userName)
+                            .foregroundColor(.idleAmber)
+                    }
+                }
+
                 HStack {
                     Text("Status")
                     Spacer()
@@ -133,13 +148,6 @@ struct PlexSettingsView: View {
                     Text("Connected")
                         .font(.idleCaption)
                         .foregroundColor(.idleAmber)
-                }
-
-                HStack {
-                    Text("Player Name")
-                    Spacer()
-                    Text("idle")
-                        .foregroundColor(.gray)
                 }
             }
 
@@ -235,8 +243,12 @@ struct PlexSettingsView: View {
                 linkCodeSection(code: code)
 
             case .authenticated:
-                if isLoadingServers {
+                if isLoadingServers || isLoadingUsers {
                     serverLoadingSection
+                } else if selectedProtectedUser != nil {
+                    pinEntrySection
+                } else if !homeUsers.isEmpty {
+                    userPickerSection
                 } else if !servers.isEmpty {
                     serverPickerSection
                 }
@@ -359,6 +371,108 @@ struct PlexSettingsView: View {
         }
     }
 
+    // MARK: - User Picker
+
+    private var userPickerSection: some View {
+        Section("Select User") {
+            ForEach(homeUsers) { user in
+                Button {
+                    selectUser(user)
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: user.isAdmin ? "person.badge.key" : "person")
+                            .foregroundColor(.idleAmber)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(user.title)
+                                .font(.idleBody)
+                                .foregroundColor(.white)
+
+                            if user.isAdmin {
+                                Text("Admin")
+                                    .font(.idleCaption)
+                                    .foregroundColor(.idleAmber)
+                            }
+                        }
+
+                        Spacer()
+
+                        if user.isProtected {
+                            Image(systemName: "lock.fill")
+                                .foregroundColor(.gray)
+                                .font(.caption)
+                        }
+
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.gray)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+    }
+
+    // MARK: - PIN Entry
+
+    private var pinEntrySection: some View {
+        Group {
+            Section {
+                VStack(spacing: 16) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(.idleAmber)
+
+                    Text("Enter PIN for \(selectedProtectedUser?.title ?? "user")")
+                        .font(.idleHeadline)
+                        .foregroundColor(.white)
+
+                    SecureField("PIN", text: $pinEntry)
+                        .keyboardType(.numberPad)
+                        .textContentType(.password)
+                        .multilineTextAlignment(.center)
+                        .font(.system(size: 24, weight: .bold, design: .monospaced))
+                        .padding(.horizontal, 60)
+
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(.idleCaption)
+                            .foregroundColor(.red)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .listRowBackground(Color.idleSurface)
+            }
+
+            Section {
+                Button {
+                    confirmPINEntry()
+                } label: {
+                    HStack {
+                        Spacer()
+                        Text("Continue")
+                            .foregroundColor(.idleAmber)
+                        Spacer()
+                    }
+                }
+                .disabled(pinEntry.isEmpty)
+
+                Button(role: .cancel) {
+                    selectedProtectedUser = nil
+                    pinEntry = ""
+                    errorMessage = nil
+                } label: {
+                    HStack {
+                        Spacer()
+                        Text("Back")
+                            .foregroundColor(.gray)
+                        Spacer()
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Actions
 
     private func loadExistingConfig() {
@@ -396,19 +510,96 @@ struct PlexSettingsView: View {
                 return
             }
 
-            let config = PlexConfig(
-                authToken: authToken,
-                serverAccessToken: token,
-                serverURL: connectionURL,
-                serverName: server.name,
-                machineIdentifier: server.clientIdentifier
-            )
-            PlexService.saveConfig(config)
-            existingConfig = config
+            // Store the pending server info and fetch home users
+            pendingServer = server
+            pendingServerURL = connectionURL
             isLoadingServers = false
-            pinAuth.cancel()
 
-            // Refresh the service registry
+            // Fetch home users to see if user selection is needed
+            isLoadingUsers = true
+            do {
+                let users = try await PlexHomeUserManager.fetchHomeUsers(token: authToken)
+                homeUsers = users
+                isLoadingUsers = false
+
+                // If only one user (admin only, no managed users), skip user selection
+                if users.count <= 1 {
+                    finalizeConfig(userToken: authToken, userName: users.first?.title, userID: users.first?.id)
+                }
+            } catch {
+                // If we can't fetch users, proceed without user selection
+                isLoadingUsers = false
+                finalizeConfig(userToken: authToken, userName: nil, userID: nil)
+            }
+        }
+    }
+
+    private func selectUser(_ user: PlexHomeUser) {
+        if user.isProtected {
+            selectedProtectedUser = user
+            pinEntry = ""
+            errorMessage = nil
+        } else {
+            // No PIN needed — switch directly
+            switchToUser(user, pin: nil)
+        }
+    }
+
+    private func confirmPINEntry() {
+        guard let user = selectedProtectedUser else { return }
+        switchToUser(user, pin: pinEntry)
+    }
+
+    private func switchToUser(_ user: PlexHomeUser, pin: String?) {
+        guard case .authenticated(let authToken) = pinAuth.state else { return }
+        isLoadingUsers = true
+        errorMessage = nil
+
+        Task {
+            do {
+                let userToken = try await PlexHomeUserManager.switchUser(
+                    userID: user.id,
+                    pin: pin,
+                    adminToken: authToken
+                )
+                selectedProtectedUser = nil
+                pinEntry = ""
+                isLoadingUsers = false
+                finalizeConfig(userToken: userToken, userName: user.title, userID: user.id)
+            } catch let error as PlexError where error == .incorrectPIN {
+                errorMessage = "Incorrect PIN"
+                isLoadingUsers = false
+            } catch {
+                errorMessage = "Failed to switch user: \(error.localizedDescription)"
+                isLoadingUsers = false
+            }
+        }
+    }
+
+    private func finalizeConfig(userToken: String, userName: String?, userID: Int?) {
+        guard case .authenticated(let authToken) = pinAuth.state,
+              let server = pendingServer,
+              let connectionURL = pendingServerURL else { return }
+
+        let config = PlexConfig(
+            authToken: authToken,
+            userToken: userToken,
+            serverAccessToken: server.accessToken ?? userToken,
+            serverURL: connectionURL,
+            serverName: server.name,
+            machineIdentifier: server.clientIdentifier,
+            selectedUserName: userName,
+            selectedUserID: userID
+        )
+        PlexService.saveConfig(config)
+        existingConfig = config
+        homeUsers = []
+        pendingServer = nil
+        pendingServerURL = nil
+        pinAuth.cancel()
+
+        // Refresh the service registry
+        Task {
             try? await (ServiceRegistry.shared.service(byID: "plex") as? PlexService)?.authenticate()
         }
     }
@@ -417,6 +608,9 @@ struct PlexSettingsView: View {
         (ServiceRegistry.shared.service(byID: "plex") as? PlexService)?.signOut()
         existingConfig = nil
         servers = []
+        homeUsers = []
+        pendingServer = nil
+        pendingServerURL = nil
         pinAuth.cancel()
     }
 }
