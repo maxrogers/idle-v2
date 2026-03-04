@@ -385,24 +385,30 @@ struct PlexSettingsView: View {
 
     private func selectServer(_ server: PlexResource) {
         guard case .authenticated(let authToken) = pinAuth.state else { return }
-        guard let connectionURL = PlexServerDiscovery.bestConnectionURL(for: server) else {
-            errorMessage = "No connection available for this server."
-            return
-        }
+        isLoadingServers = true
+        errorMessage = nil
 
-        let config = PlexConfig(
-            authToken: authToken,
-            serverAccessToken: server.accessToken ?? authToken,
-            serverURL: connectionURL,
-            serverName: server.name,
-            machineIdentifier: server.clientIdentifier
-        )
-        PlexService.saveConfig(config)
-        existingConfig = config
-        pinAuth.cancel()
-
-        // Refresh the service registry
         Task {
+            let token = server.accessToken ?? authToken
+            guard let connectionURL = await PlexServerDiscovery.bestConnectionURL(for: server, token: token) else {
+                errorMessage = "Could not reach any connection for this server."
+                isLoadingServers = false
+                return
+            }
+
+            let config = PlexConfig(
+                authToken: authToken,
+                serverAccessToken: token,
+                serverURL: connectionURL,
+                serverName: server.name,
+                machineIdentifier: server.clientIdentifier
+            )
+            PlexService.saveConfig(config)
+            existingConfig = config
+            isLoadingServers = false
+            pinAuth.cancel()
+
+            // Refresh the service registry
             try? await (ServiceRegistry.shared.service(byID: "plex") as? PlexService)?.authenticate()
         }
     }

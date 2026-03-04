@@ -29,10 +29,15 @@ enum PlexHeaders {
         request.setValue(device, forHTTPHeaderField: "X-Plex-Device")
         request.setValue(product, forHTTPHeaderField: "X-Plex-Device-Name")
         request.setValue("player", forHTTPHeaderField: "X-Plex-Provides")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
         if let token {
             request.setValue(token, forHTTPHeaderField: "X-Plex-Token")
         }
+    }
+
+    /// Apply headers for plex.tv API calls (JSON responses).
+    static func applyForPlexTV(to request: inout URLRequest, token: String? = nil) {
+        apply(to: &request, token: token)
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
     }
 }
 
@@ -138,7 +143,7 @@ final class PlexPINAuth: ObservableObject {
         var request = URLRequest(url: URL(string: "https://plex.tv/api/v2/pins")!)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        PlexHeaders.apply(to: &request)
+        PlexHeaders.applyForPlexTV(to: &request)
         request.httpBody = "strong=false".data(using: .utf8)
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -156,7 +161,7 @@ final class PlexPINAuth: ObservableObject {
 
             var request = URLRequest(url: URL(string: "https://plex.tv/api/v2/pins/\(pinID)")!)
             request.httpMethod = "GET"
-            PlexHeaders.apply(to: &request)
+            PlexHeaders.applyForPlexTV(to: &request)
 
             let (data, _) = try await URLSession.shared.data(for: request)
             let pin = try JSONDecoder().decode(PlexPIN.self, from: data)
@@ -177,7 +182,7 @@ enum PlexServerDiscovery {
 
     static func fetchServers(token: String) async throws -> [PlexResource] {
         var request = URLRequest(url: URL(string: "https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=1")!)
-        PlexHeaders.apply(to: &request, token: token)
+        PlexHeaders.applyForPlexTV(to: &request, token: token)
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
@@ -192,18 +197,41 @@ enum PlexServerDiscovery {
         }
     }
 
-    /// Pick the best connection URL for a server, preferring non-local HTTPS.
-    static func bestConnectionURL(for server: PlexResource) -> String? {
-        // Prefer remote HTTPS connections
-        if let remote = server.connections?.first(where: { !($0.local ?? false) && $0.uri.hasPrefix("https") }) {
-            return remote.uri
+    /// Pick the best reachable connection URL for a server.
+    /// Tries each connection with a quick health check, preferring non-local HTTPS.
+    static func bestConnectionURL(for server: PlexResource, token: String) async -> String? {
+        guard let connections = server.connections, !connections.isEmpty else { return nil }
+
+        // Sort: prefer remote HTTPS, then any HTTPS, then anything
+        let sorted = connections.sorted { a, b in
+            let aScore = (a.uri.hasPrefix("https") ? 2 : 0) + (!(a.local ?? false) ? 1 : 0)
+            let bScore = (b.uri.hasPrefix("https") ? 2 : 0) + (!(b.local ?? false) ? 1 : 0)
+            return aScore > bScore
         }
-        // Then any HTTPS
-        if let https = server.connections?.first(where: { $0.uri.hasPrefix("https") }) {
-            return https.uri
+
+        // Quick connectivity test (3s timeout)
+        let testSession: URLSession = {
+            let config = URLSessionConfiguration.default
+            config.timeoutIntervalForRequest = 3
+            return URLSession(configuration: config)
+        }()
+
+        for conn in sorted {
+            guard let url = URL(string: "\(conn.uri)/identity") else { continue }
+            var request = URLRequest(url: url)
+            PlexHeaders.apply(to: &request, token: token)
+            do {
+                let (_, response) = try await testSession.data(for: request)
+                if let http = response as? HTTPURLResponse, http.statusCode == 200 {
+                    return conn.uri
+                }
+            } catch {
+                continue
+            }
         }
-        // Fallback to first available
-        return server.connections?.first?.uri
+
+        // If none responded, fall back to first remote HTTPS (might work on device)
+        return sorted.first?.uri
     }
 }
 
@@ -240,7 +268,7 @@ final class PlexService: VideoService {
         var request = URLRequest(url: url)
         PlexHeaders.apply(to: &request, token: config.serverAccessToken)
 
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (_, response) = try await Self.serverSession.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw PlexError.authenticationFailed
         }
@@ -253,18 +281,31 @@ final class PlexService: VideoService {
         UserDefaults.standard.removeObject(forKey: "idle_plex_config")
     }
 
-    // MARK: - Content Browsing
+    // MARK: - Server Requests
 
-    func fetchCategories() async throws -> [ContentCategory] {
+    /// URLSession with a shorter timeout for server-to-server requests.
+    private static let serverSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 10
+        config.timeoutIntervalForResource = 30
+        return URLSession(configuration: config)
+    }()
+
+    private func serverRequest(path: String) throws -> URLRequest {
         guard let config = config else { throw PlexError.notConfigured }
-
-        guard let url = URL(string: "\(config.serverURL)/library/sections") else {
+        guard let url = URL(string: "\(config.serverURL)\(path)") else {
             throw PlexError.notConfigured
         }
         var request = URLRequest(url: url)
         PlexHeaders.apply(to: &request, token: config.serverAccessToken)
+        return request
+    }
 
-        let (data, _) = try await URLSession.shared.data(for: request)
+    // MARK: - Content Browsing
+
+    func fetchCategories() async throws -> [ContentCategory] {
+        let request = try serverRequest(path: "/library/sections")
+        let (data, _) = try await Self.serverSession.data(for: request)
 
         let parser = PlexXMLParser()
         let sections = parser.parseSections(data: data)
@@ -280,14 +321,8 @@ final class PlexService: VideoService {
 
     func fetchItems(for category: ContentCategory) async throws -> [VideoItem] {
         guard let config = config else { throw PlexError.notConfigured }
-
-        guard let url = URL(string: "\(config.serverURL)/library/sections/\(category.id)/all") else {
-            throw PlexError.notConfigured
-        }
-        var request = URLRequest(url: url)
-        PlexHeaders.apply(to: &request, token: config.serverAccessToken)
-
-        let (data, _) = try await URLSession.shared.data(for: request)
+        let request = try serverRequest(path: "/library/sections/\(category.id)/all")
+        let (data, _) = try await Self.serverSession.data(for: request)
 
         let parser = PlexXMLParser()
         let items = parser.parseItems(data: data, serverURL: config.serverURL, token: config.serverAccessToken)
@@ -305,15 +340,9 @@ final class PlexService: VideoService {
 
     func search(query: String) async throws -> [VideoItem] {
         guard let config = config else { throw PlexError.notConfigured }
-
         let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
-        guard let url = URL(string: "\(config.serverURL)/search?query=\(encodedQuery)") else {
-            throw PlexError.notConfigured
-        }
-        var request = URLRequest(url: url)
-        PlexHeaders.apply(to: &request, token: config.serverAccessToken)
-
-        let (data, _) = try await URLSession.shared.data(for: request)
+        let request = try serverRequest(path: "/search?query=\(encodedQuery)")
+        let (data, _) = try await Self.serverSession.data(for: request)
 
         let parser = PlexXMLParser()
         let items = parser.parseItems(data: data, serverURL: config.serverURL, token: config.serverAccessToken)
