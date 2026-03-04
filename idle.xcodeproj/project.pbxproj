@@ -23,7 +23,6 @@
 		C19910494C4A10E47E604002 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07C80122684DEA46C7CCC1BD /* AppDelegate.swift */; };
 		C52B76A88E6E39F69BD215DB /* GenericExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C96B820C8A3C019F7BE52A0 /* GenericExtractor.swift */; };
 		C81A4B9029D60E843065BEAD /* QueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C33940B70DA20A16ABCDC852 /* QueueView.swift */; };
-		CD1E23CFAFC2191AC0F6854C /* CarPlayVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AD1C9458E149C5A5A2D20D5 /* CarPlayVideoViewController.swift */; };
 		D3C682A0372F56426ADAA3EE /* PlexExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AECF9157A7C3DB422CEE28 /* PlexExtractor.swift */; };
 		DE876575002AE240F6682953 /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFABA7670217528459638A08 /* CarPlaySceneDelegate.swift */; };
 		DEFB5D6B4FAB8B9728BCB68E /* PlayOnCarPlayIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6256117AC3831C27D0E6213B /* PlayOnCarPlayIntent.swift */; };
@@ -37,7 +36,6 @@
 		0084A3B3C84042DB79C73A31 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		07C80122684DEA46C7CCC1BD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		16AECF9157A7C3DB422CEE28 /* PlexExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlexExtractor.swift; sourceTree = "<group>"; };
-		1AD1C9458E149C5A5A2D20D5 /* CarPlayVideoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayVideoViewController.swift; sourceTree = "<group>"; };
 		293A672914C2AB0FE0EAC76B /* VideoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoItem.swift; sourceTree = "<group>"; };
 		2D71955832BDA698067C98D4 /* YouTubeExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeExtractor.swift; sourceTree = "<group>"; };
 		362BE61C4A891456E73A3CC0 /* idle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = idle.entitlements; sourceTree = "<group>"; };
@@ -95,7 +93,6 @@
 			isa = PBXGroup;
 			children = (
 				FFABA7670217528459638A08 /* CarPlaySceneDelegate.swift */,
-				1AD1C9458E149C5A5A2D20D5 /* CarPlayVideoViewController.swift */,
 			);
 			path = CarPlay;
 			sourceTree = "<group>";
@@ -251,7 +248,6 @@
 			files = (
 				C19910494C4A10E47E604002 /* AppDelegate.swift in Sources */,
 				DE876575002AE240F6682953 /* CarPlaySceneDelegate.swift in Sources */,
-				CD1E23CFAFC2191AC0F6854C /* CarPlayVideoViewController.swift in Sources */,
 				2CE5FC2D8E2DEA734884EC81 /* ContentView.swift in Sources */,
 				18562F0E9B17DDA0A5CDF7AF /* ExtractionRouter.swift in Sources */,
 				C52B76A88E6E39F69BD215DB /* GenericExtractor.swift in Sources */,
@@ -282,16 +278,19 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = YES;
 				CODE_SIGN_ENTITLEMENTS = idle/idle.entitlements;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 94Y5JF4987;
 				INFOPLIST_FILE = idle/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.idle.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.steverogers.idle.app;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -363,16 +362,19 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = YES;
 				CODE_SIGN_ENTITLEMENTS = idle/idle.entitlements;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 94Y5JF4987;
 				INFOPLIST_FILE = idle/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.idle.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.steverogers.idle.app;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				TARGETED_DEVICE_FAMILY = "1,2";

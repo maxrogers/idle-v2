@@ -2,43 +2,15 @@ import CarPlay
 import UIKit
 
 /// Manages the CarPlay scene lifecycle and UI.
-/// Supports both Path A (CPWindow for navigation entitlement) and Path B (templates only).
+/// Uses the audio entitlement with CPNowPlayingTemplate + AirPlay video routing.
 final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
 
     private var interfaceController: CPInterfaceController?
-    private var carWindow: CPWindow?
-    private var videoViewController: CarPlayVideoViewController?
 
     /// Track whether CarPlay is connected for auto-play decisions.
     static var isConnected = false
 
-    // MARK: - Path A: Navigation Entitlement (CPWindow available)
-
-    func templateApplicationScene(
-        _ templateApplicationScene: CPTemplateApplicationScene,
-        didConnect interfaceController: CPInterfaceController,
-        to window: CPWindow
-    ) {
-        self.interfaceController = interfaceController
-        self.carWindow = window
-        Self.isConnected = true
-
-        // Set up the video view controller as the window's root
-        let videoVC = CarPlayVideoViewController()
-        window.rootViewController = videoVC
-        self.videoViewController = videoVC
-
-        // Connect to PlaybackEngine
-        videoVC.attachPlayer(PlaybackEngine.shared.player)
-
-        // Set up template hierarchy
-        setupTemplates(interfaceController: interfaceController)
-
-        // Check for queued items
-        checkForPendingPlayback()
-    }
-
-    // MARK: - Path B: Templates Only (no CPWindow)
+    // MARK: - Scene Lifecycle (Audio App — Templates Only)
 
     func templateApplicationScene(
         _ templateApplicationScene: CPTemplateApplicationScene,
@@ -56,19 +28,6 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         didDisconnectInterfaceController interfaceController: CPInterfaceController
     ) {
         self.interfaceController = nil
-        self.carWindow = nil
-        self.videoViewController = nil
-        Self.isConnected = false
-    }
-
-    func templateApplicationScene(
-        _ templateApplicationScene: CPTemplateApplicationScene,
-        didDisconnect interfaceController: CPInterfaceController,
-        from window: CPWindow
-    ) {
-        self.interfaceController = nil
-        self.carWindow = nil
-        self.videoViewController = nil
         Self.isConnected = false
     }
 
@@ -76,9 +35,17 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     private func setupTemplates(interfaceController: CPInterfaceController) {
         let queueTab = buildQueueTab()
-        // Service tabs are added dynamically based on authenticated services
+
         var tabs: [CPTemplate] = [queueTab]
 
+        // Add Now Playing tab (audio entitlement exclusive)
+        let nowPlaying = CPNowPlayingTemplate.shared
+        nowPlaying.add(self)
+        nowPlaying.tabTitle = "Now Playing"
+        nowPlaying.tabImage = UIImage(systemName: "play.circle.fill")
+        tabs.append(nowPlaying)
+
+        // Service tabs appear only when authenticated
         let services = ServiceRegistry.shared.authenticatedServices
         for service in services {
             tabs.append(buildServiceTab(for: service))
@@ -214,6 +181,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         }
         PlaybackEngine.shared.play(item: item)
         QueueManager.shared.markAsPlayed(item)
+        pushNowPlaying()
     }
 
     private func playFromService(service: VideoService, item: VideoItem) {
@@ -230,6 +198,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
                 QueueManager.shared.addItem(item)
                 PlaybackEngine.shared.play(item: item)
                 QueueManager.shared.markAsPlayed(item)
+                pushNowPlaying()
             } catch {
                 showError("Can't play this one — try a different video")
             }
@@ -248,6 +217,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             QueueManager.shared.markAsReady(item, streamURL: best.url.absoluteString)
             PlaybackEngine.shared.play(item: item)
             QueueManager.shared.markAsPlayed(item)
+            pushNowPlaying()
         } catch {
             showError("Can't play this one — try a direct video link")
             QueueManager.shared.markAsFailed(item)
@@ -270,11 +240,48 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         }
     }
 
+    // MARK: - Now Playing
+
+    /// Push the system Now Playing template after starting playback.
+    private func pushNowPlaying() {
+        guard let interfaceController else { return }
+        let nowPlaying = CPNowPlayingTemplate.shared
+
+        // Only push if not already the top template
+        if interfaceController.topTemplate !== nowPlaying {
+            interfaceController.pushTemplate(nowPlaying, animated: true, completion: nil)
+        }
+    }
+
     // MARK: - Error Display
 
     private func showError(_ message: String) {
         let action = CPAlertAction(title: "OK", style: .default, handler: { _ in })
         let alert = CPAlertTemplate(titleVariants: [message], actions: [action])
         interfaceController?.presentTemplate(alert, animated: true, completion: nil)
+    }
+}
+
+// MARK: - CPNowPlayingTemplateObserver
+
+extension CarPlaySceneDelegate: @preconcurrency CPNowPlayingTemplateObserver {
+    func nowPlayingTemplateUpNextButtonTapped(_ nowPlayingTemplate: CPNowPlayingTemplate) {
+        // Show the queue when user taps "Up Next"
+        let queueTab = buildQueueTab()
+        interfaceController?.pushTemplate(queueTab, animated: true, completion: nil)
+    }
+
+    func nowPlayingTemplateAlbumArtistButtonTapped(_ nowPlayingTemplate: CPNowPlayingTemplate) {
+        // Show source info for current item
+        guard let currentItem = PlaybackEngine.shared.currentItem else { return }
+        let detailItem = CPListItem(
+            text: currentItem.title,
+            detailText: currentItem.source.rawValue.capitalized
+        )
+        let detail = CPListTemplate(
+            title: currentItem.source.rawValue.capitalized,
+            sections: [CPListSection(items: [detailItem])]
+        )
+        interfaceController?.pushTemplate(detail, animated: true, completion: nil)
     }
 }

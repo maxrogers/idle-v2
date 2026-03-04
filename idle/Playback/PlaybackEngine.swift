@@ -108,6 +108,11 @@ final class PlaybackEngine: ObservableObject {
         player.usesExternalPlaybackWhileExternalScreenIsActive = true
     }
 
+    /// Whether video is currently being routed externally (e.g. CarPlay via AirPlay).
+    var isExternalPlaybackActive: Bool {
+        player.isExternalPlaybackActive
+    }
+
     private func setupObservers() {
         // Periodic time observer
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)

@@ -109,7 +109,7 @@ final class QueueManager: ObservableObject {
 
     // MARK: - Shared Container (for Share Extension)
 
-    static let appGroupID = "group.com.idle.shared"
+    static let appGroupID = "group.com.steverogers.idle.shared"
     static let sharedURLKey = "idle_shared_url"
 
     /// Check if the share extension has queued a URL.
