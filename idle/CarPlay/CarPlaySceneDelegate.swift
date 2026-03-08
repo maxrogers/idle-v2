@@ -42,7 +42,10 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     @objc private func handleServiceAuthChanged() {
         guard let interfaceController else { return }
-        setupTemplates(interfaceController: interfaceController)
+        // Give the service registry a moment to update auth state before rebuilding
+        Task { @MainActor in
+            setupTemplates(interfaceController: interfaceController)
+        }
     }
 
     // MARK: - Template Setup

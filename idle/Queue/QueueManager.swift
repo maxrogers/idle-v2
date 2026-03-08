@@ -23,7 +23,9 @@ final class QueueManager: ObservableObject {
     private func setupSwiftData() {
         do {
             let schema = Schema([VideoItem.self])
-            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+            // Store in the app's own container (not the app group) to avoid
+            // CoreData errors when the shared Application Support dir doesn't exist yet.
+            let config = ModelConfiguration("idle-queue", schema: schema, isStoredInMemoryOnly: false)
             modelContainer = try ModelContainer(for: schema, configurations: [config])
             modelContext = modelContainer?.mainContext
         } catch {

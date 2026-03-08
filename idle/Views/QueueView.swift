@@ -4,6 +4,9 @@ struct QueueView: View {
     @ObservedObject private var queue = QueueManager.shared
     @ObservedObject private var playback = PlaybackEngine.shared
     @State private var showNowPlaying = false
+    @State private var showAddURL = false
+    @State private var urlInput = ""
+    @State private var isAdding = false
 
     var body: some View {
         NavigationStack {
@@ -37,15 +40,111 @@ struct QueueView: View {
                             .foregroundColor(.white)
                     }
                 }
-                if playback.isPlaying {
-                    ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if playback.isPlaying {
                         nowPlayingBadge
+                    } else {
+                        Button {
+                            // Pre-fill with clipboard URL if available
+                            if let clip = UIPasteboard.general.string, clip.hasPrefix("http") {
+                                urlInput = clip
+                            }
+                            showAddURL = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .foregroundColor(.idleAmber)
+                        }
                     }
                 }
             }
             .sheet(isPresented: $showNowPlaying) {
                 NowPlayingSheet()
             }
+            .sheet(isPresented: $showAddURL) {
+                addURLSheet
+            }
+        }
+    }
+
+    // MARK: - Add URL Sheet
+
+    private var addURLSheet: some View {
+        NavigationStack {
+            ZStack {
+                Color.idleSurface.ignoresSafeArea()
+
+                VStack(spacing: 24) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Video URL")
+                            .font(.idleCaption)
+                            .foregroundColor(.gray)
+
+                        TextField("https://", text: $urlInput)
+                            .keyboardType(.URL)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                            .padding(12)
+                            .background(Color.idleCard)
+                            .cornerRadius(10)
+                            .foregroundColor(.white)
+                    }
+                    .padding(.horizontal, 20)
+
+                    Text("Paste any video URL — YouTube, direct video files, or other supported sources.")
+                        .font(.idleCaption)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+
+                    Spacer()
+                }
+                .padding(.top, 24)
+            }
+            .navigationTitle("Add Video")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        urlInput = ""
+                        showAddURL = false
+                    }
+                    .foregroundColor(.gray)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    if isAdding {
+                        ProgressView().tint(.idleAmber)
+                    } else {
+                        Button("Add") {
+                            addURL()
+                        }
+                        .foregroundColor(.idleAmber)
+                        .disabled(urlInput.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+        .preferredColorScheme(.dark)
+    }
+
+    private func addURL() {
+        let trimmed = urlInput.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        isAdding = true
+
+        let item = QueueManager.shared.addFromURL(trimmed)
+        Task { @MainActor in
+            do {
+                let streams = try await ExtractionRouter.shared.extract(from: trimmed)
+                if let best = streams.first {
+                    QueueManager.shared.markAsReady(item, streamURL: best.url.absoluteString)
+                }
+            } catch {
+                QueueManager.shared.markAsFailed(item)
+            }
+            isAdding = false
+            urlInput = ""
+            showAddURL = false
         }
     }
 

@@ -596,7 +596,7 @@ struct PlexSettingsView: View {
         pinAuth.cancel()
 
         // Refresh the service registry and notify CarPlay to rebuild tabs
-        Task {
+        Task { @MainActor in
             try? await (ServiceRegistry.shared.service(byID: "plex") as? PlexService)?.authenticate()
             NotificationCenter.default.post(name: .plexServiceAuthChanged, object: nil)
         }

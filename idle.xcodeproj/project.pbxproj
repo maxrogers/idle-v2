@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -13,6 +13,7 @@
 		2D95AD6F33F136A6527CF630 /* PlaybackEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9339AB5DA747F72AB1D280 /* PlaybackEngine.swift */; };
 		419CA118BC6E9A28FFA53C90 /* ServicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6008EDD3192394929660078 /* ServicesView.swift */; };
 		55D8162A2F57264B0082B646 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 55530E7E2F5695DD001776FA /* Assets.xcassets */; };
+		55FFD2692F5DDBAC0072B915 /* idle​Share.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 55FFD25F2F5DDBAC0072B915 /* idle​Share.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		56BB61C2E5171AB8642E44FC /* YouTubeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D03B917D86DB9C7DE43ED5E3 /* YouTubeService.swift */; };
 		60DBAA58B119E415F043EDE8 /* IdleDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADBB38396D5B11194C132AA7 /* IdleDetector.swift */; };
 		645E9FEE2CA21E1062C88DA6 /* ServiceRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC8A4306581F64498C449E8 /* ServiceRegistry.swift */; };
@@ -32,6 +33,30 @@
 		FEB8BE6D0BFC51132954B593 /* VideoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293A672914C2AB0FE0EAC76B /* VideoItem.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		55FFD2672F5DDBAC0072B915 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EF111C1E0A3C9C8E3DEA7409 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 55FFD25E2F5DDBAC0072B915;
+			remoteInfo = "idle​Share";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		55FFD26A2F5DDBAC0072B915 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				55FFD2692F5DDBAC0072B915 /* idle​Share.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		0084A3B3C84042DB79C73A31 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		07C80122684DEA46C7CCC1BD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -41,6 +66,7 @@
 		362BE61C4A891456E73A3CC0 /* idle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = idle.entitlements; sourceTree = "<group>"; };
 		3A9339AB5DA747F72AB1D280 /* PlaybackEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackEngine.swift; sourceTree = "<group>"; };
 		55530E7E2F5695DD001776FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		55FFD25F2F5DDBAC0072B915 /* idle​Share.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "idle​Share.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6256117AC3831C27D0E6213B /* PlayOnCarPlayIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayOnCarPlayIntent.swift; sourceTree = "<group>"; };
 		7C96B820C8A3C019F7BE52A0 /* GenericExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericExtractor.swift; sourceTree = "<group>"; };
 		7EC8A4306581F64498C449E8 /* ServiceRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceRegistry.swift; sourceTree = "<group>"; };
@@ -61,11 +87,36 @@
 		FFABA7670217528459638A08 /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		55FFD26D2F5DDBAC0072B915 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 55FFD25E2F5DDBAC0072B915 /* idle​Share */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		55FFD2602F5DDBAC0072B915 /* idle​Share */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (55FFD26D2F5DDBAC0072B915 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = "idle​Share"; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		55FFD25C2F5DDBAC0072B915 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
 		0775D059965A96118883633B /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				F3F7371C2F43CA8EC0946AB2 /* idle.app */,
+				55FFD25F2F5DDBAC0072B915 /* idle​Share.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -74,6 +125,7 @@
 			isa = PBXGroup;
 			children = (
 				DA2CB72666F8E94BA1B10C41 /* idle */,
+				55FFD2602F5DDBAC0072B915 /* idle​Share */,
 				0775D059965A96118883633B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -185,16 +237,40 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		55FFD25E2F5DDBAC0072B915 /* idle​Share */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 55FFD26E2F5DDBAC0072B915 /* Build configuration list for PBXNativeTarget "idle​Share" */;
+			buildPhases = (
+				55FFD25B2F5DDBAC0072B915 /* Sources */,
+				55FFD25C2F5DDBAC0072B915 /* Frameworks */,
+				55FFD25D2F5DDBAC0072B915 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				55FFD2602F5DDBAC0072B915 /* idle​Share */,
+			);
+			name = "idle​Share";
+			packageProductDependencies = (
+			);
+			productName = "idle​Share";
+			productReference = 55FFD25F2F5DDBAC0072B915 /* idle​Share.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		917091C8E46B9502EDE3C845 /* idle */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E0010CD6FE994544FE3513B5 /* Build configuration list for PBXNativeTarget "idle" */;
 			buildPhases = (
 				192EFA3AB787940A7A1C384E /* Sources */,
 				55D816292F5726160082B646 /* Resources */,
+				55FFD26A2F5DDBAC0072B915 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				55FFD2682F5DDBAC0072B915 /* PBXTargetDependency */,
 			);
 			name = idle;
 			packageProductDependencies = (
@@ -210,7 +286,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
+				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					55FFD25E2F5DDBAC0072B915 = {
+						CreatedOnToolsVersion = 26.4;
+					};
+				};
 			};
 			buildConfigurationList = 46D880858231DD5B97056BB2 /* Build configuration list for PBXProject "idle" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -226,6 +308,7 @@
 			projectRoot = "";
 			targets = (
 				917091C8E46B9502EDE3C845 /* idle */,
+				55FFD25E2F5DDBAC0072B915 /* idle​Share */,
 			);
 		};
 /* End PBXProject section */
@@ -236,6 +319,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				55D8162A2F57264B0082B646 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		55FFD25D2F5DDBAC0072B915 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,9 +361,100 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		55FFD25B2F5DDBAC0072B915 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		55FFD2682F5DDBAC0072B915 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 55FFD25E2F5DDBAC0072B915 /* idle​Share */;
+			targetProxy = 55FFD2672F5DDBAC0072B915 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		55FFD26B2F5DDBAC0072B915 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 94Y5JF4987;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "idle​Share/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "idle​Share";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.steverogers.idle.app.idle-Share";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		55FFD26C2F5DDBAC0072B915 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 94Y5JF4987;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "idle​Share/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "idle​Share";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.steverogers.idle.app.idle-Share";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		7083AC05C3B4BF60096207A3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -457,6 +638,15 @@
 			buildConfigurations = (
 				DB6A93B0CA5AE3177AD4FA94 /* Debug */,
 				AB002E459DBFB687CFBCF9CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		55FFD26E2F5DDBAC0072B915 /* Build configuration list for PBXNativeTarget "idle​Share" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				55FFD26B2F5DDBAC0072B915 /* Debug */,
+				55FFD26C2F5DDBAC0072B915 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
