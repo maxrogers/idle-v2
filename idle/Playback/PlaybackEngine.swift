@@ -29,11 +29,12 @@ final class PlaybackEngine: ObservableObject {
     private var rateObservation: NSKeyValueObservation?
 
     private init() {
-        configureAudioSession()
         configureAirPlay()
         setupRemoteCommandCenter()
         setupObservers()
         setupInterruptionHandling()
+        // Audio session activation is deferred to first play() call to avoid
+        // blocking the main thread during launch (causes white screen hang).
     }
 
     // MARK: - Public API
@@ -41,6 +42,7 @@ final class PlaybackEngine: ObservableObject {
     func play(item: VideoItem) {
         guard let urlString = item.streamURL, let url = URL(string: urlString) else { return }
 
+        activateAudioSessionIfNeeded()
         currentItem = item
         let playerItem = AVPlayerItem(url: url)
         player.replaceCurrentItem(with: playerItem)
@@ -52,6 +54,7 @@ final class PlaybackEngine: ObservableObject {
     }
 
     func play(url: URL) {
+        activateAudioSessionIfNeeded()
         let playerItem = AVPlayerItem(url: url)
         player.replaceCurrentItem(with: playerItem)
         player.play()
@@ -93,7 +96,11 @@ final class PlaybackEngine: ObservableObject {
 
     // MARK: - Configuration
 
-    private func configureAudioSession() {
+    private var audioSessionConfigured = false
+
+    private func activateAudioSessionIfNeeded() {
+        guard !audioSessionConfigured else { return }
+        audioSessionConfigured = true
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playback, mode: .moviePlayback)
