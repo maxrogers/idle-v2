@@ -21,6 +21,14 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
         setupTemplates(interfaceController: interfaceController)
         checkForPendingPlayback()
+
+        // Observe auth state changes so CarPlay tabs update when user configures a service
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleServiceAuthChanged),
+            name: .plexServiceAuthChanged,
+            object: nil
+        )
     }
 
     func templateApplicationScene(
@@ -29,6 +37,12 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     ) {
         self.interfaceController = nil
         Self.isConnected = false
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func handleServiceAuthChanged() {
+        guard let interfaceController else { return }
+        setupTemplates(interfaceController: interfaceController)
     }
 
     // MARK: - Template Setup

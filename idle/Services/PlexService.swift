@@ -274,7 +274,7 @@ enum PlexHomeUserManager {
     /// Fetch all home users for this account.
     static func fetchHomeUsers(token: String) async throws -> [PlexHomeUser] {
         var request = URLRequest(url: URL(string: "https://plex.tv/api/home/users")!)
-        PlexHeaders.apply(to: &request, token: token)
+        PlexHeaders.applyForPlexTV(to: &request, token: token)
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
@@ -291,11 +291,16 @@ enum PlexHomeUserManager {
     static func switchUser(userID: Int, pin: String?, adminToken: String) async throws -> String {
         var request = URLRequest(url: URL(string: "https://plex.tv/api/home/users/\(userID)/switch")!)
         request.httpMethod = "POST"
-        PlexHeaders.apply(to: &request, token: adminToken)
+        // Use JSON accept header — plex.tv API returns JSON for this endpoint
+        PlexHeaders.applyForPlexTV(to: &request, token: adminToken)
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
         if let pin, !pin.isEmpty {
-            request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-            request.httpBody = "pin=\(pin)".data(using: .utf8)
+            let encodedPin = pin.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? pin
+            request.httpBody = "pin=\(encodedPin)".data(using: .utf8)
+        } else {
+            // POST with empty body still required
+            request.httpBody = Data()
         }
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -584,6 +589,14 @@ final class PlexService: VideoService {
             UserDefaults.standard.set(data, forKey: "idle_plex_config")
         }
     }
+}
+
+// MARK: - Notifications
+
+extension Notification.Name {
+    /// Posted when Plex auth state changes (connected/disconnected).
+    /// CarPlay listens to this to rebuild its tab bar.
+    static let plexServiceAuthChanged = Notification.Name("idle.plexServiceAuthChanged")
 }
 
 // MARK: - Errors

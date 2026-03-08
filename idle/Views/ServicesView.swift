@@ -595,9 +595,10 @@ struct PlexSettingsView: View {
         pendingServerURL = nil
         pinAuth.cancel()
 
-        // Refresh the service registry
+        // Refresh the service registry and notify CarPlay to rebuild tabs
         Task {
             try? await (ServiceRegistry.shared.service(byID: "plex") as? PlexService)?.authenticate()
+            NotificationCenter.default.post(name: .plexServiceAuthChanged, object: nil)
         }
     }
 
@@ -609,6 +610,7 @@ struct PlexSettingsView: View {
         pendingServer = nil
         pendingServerURL = nil
         pinAuth.cancel()
+        NotificationCenter.default.post(name: .plexServiceAuthChanged, object: nil)
     }
 }
 
