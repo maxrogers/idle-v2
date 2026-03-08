@@ -6,6 +6,8 @@ import UIKit
 final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
 
     private var interfaceController: CPInterfaceController?
+    /// Guard against presenting multiple modals simultaneously.
+    private var isPresentingModal = false
 
     /// Track whether CarPlay is connected for auto-play decisions.
     static var isConnected = false
@@ -67,7 +69,8 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         }
 
         let tabBar = CPTabBarTemplate(templates: tabs)
-        interfaceController.setRootTemplate(tabBar, animated: true, completion: nil)
+        isPresentingModal = false
+        interfaceController.setRootTemplate(tabBar, animated: true) { _, _ in }
     }
 
     private func buildQueueTab() -> CPTemplate {
@@ -195,7 +198,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
                     title: category.name,
                     sections: [CPListSection(items: listItems)]
                 )
-                interfaceController?.pushTemplate(template, animated: true, completion: nil)
+                interfaceController?.pushTemplate(template, animated: true) { _, _ in }
             } catch {
                 showError("Couldn't load \(category.name)")
             }
@@ -287,16 +290,24 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
         // Only push if not already the top template
         if interfaceController.topTemplate !== nowPlaying {
-            interfaceController.pushTemplate(nowPlaying, animated: true, completion: nil)
+            interfaceController.pushTemplate(nowPlaying, animated: true) { _, _ in }
         }
     }
 
     // MARK: - Error Display
 
     private func showError(_ message: String) {
-        let action = CPAlertAction(title: "OK", style: .default, handler: { _ in })
+        guard let interfaceController, !isPresentingModal else { return }
+        isPresentingModal = true
+        let action = CPAlertAction(title: "OK", style: .default, handler: { [weak self] _ in
+            self?.interfaceController?.dismissTemplate(animated: true) { _, _ in
+                self?.isPresentingModal = false
+            }
+        })
         let alert = CPAlertTemplate(titleVariants: [message], actions: [action])
-        interfaceController?.presentTemplate(alert, animated: true, completion: nil)
+        interfaceController.presentTemplate(alert, animated: true) { [weak self] _, error in
+            if error != nil { self?.isPresentingModal = false }
+        }
     }
 }
 
@@ -306,7 +317,7 @@ extension CarPlaySceneDelegate: @preconcurrency CPNowPlayingTemplateObserver {
     func nowPlayingTemplateUpNextButtonTapped(_ nowPlayingTemplate: CPNowPlayingTemplate) {
         // Show the queue when user taps "Up Next"
         let queueTab = buildQueueTab()
-        interfaceController?.pushTemplate(queueTab, animated: true, completion: nil)
+        interfaceController?.pushTemplate(queueTab, animated: true) { _, _ in }
     }
 
     func nowPlayingTemplateAlbumArtistButtonTapped(_ nowPlayingTemplate: CPNowPlayingTemplate) {
@@ -320,6 +331,6 @@ extension CarPlaySceneDelegate: @preconcurrency CPNowPlayingTemplateObserver {
             title: currentItem.source.rawValue.capitalized,
             sections: [CPListSection(items: [detailItem])]
         )
-        interfaceController?.pushTemplate(detail, animated: true, completion: nil)
+        interfaceController?.pushTemplate(detail, animated: true) { _, _ in }
     }
 }
