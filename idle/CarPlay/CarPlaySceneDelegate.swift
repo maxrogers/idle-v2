@@ -20,11 +20,20 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     ) {
         self.interfaceController = interfaceController
         Self.isConnected = true
+        print("[CarPlay] ▶︎ didConnect — authenticated services: \(ServiceRegistry.shared.authenticatedServices.map(\.id))")
 
         setupTemplates(interfaceController: interfaceController)
         checkForPendingPlayback()
 
-        // Observe auth state changes so CarPlay tabs update when user configures a service
+        // Rebuild queue tab when items are added/removed on the phone
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleQueueChanged),
+            name: .queueDidChange,
+            object: nil
+        )
+
+        // Rebuild all tabs when Plex auth state changes
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleServiceAuthChanged),
@@ -40,11 +49,20 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         self.interfaceController = nil
         Self.isConnected = false
         NotificationCenter.default.removeObserver(self)
+        print("[CarPlay] ✕ didDisconnect")
+    }
+
+    @objc private func handleQueueChanged() {
+        guard let ic = interfaceController,
+              let tabBar = ic.rootTemplate as? CPTabBarTemplate,
+              let queueTemplate = tabBar.templates.first as? CPListTemplate else { return }
+        print("[CarPlay] ↻ queue changed — refreshing queue tab")
+        updateQueueTab(queueTemplate)
     }
 
     @objc private func handleServiceAuthChanged() {
         guard let interfaceController else { return }
-        // Give the service registry a moment to update auth state before rebuilding
+        print("[CarPlay] ↻ service auth changed — rebuilding tabs, authenticated: \(ServiceRegistry.shared.authenticatedServices.map(\.id))")
         Task { @MainActor in
             setupTemplates(interfaceController: interfaceController)
         }
@@ -64,6 +82,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
         // Service tabs appear only when authenticated
         let services = ServiceRegistry.shared.authenticatedServices
+        print("[CarPlay] setupTemplates — \(services.count) authenticated service(s): \(services.map(\.id))")
         for service in services {
             tabs.append(buildServiceTab(for: service))
         }
@@ -73,12 +92,18 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         interfaceController.setRootTemplate(tabBar, animated: true) { _, _ in }
     }
 
-    private func buildQueueTab() -> CPTemplate {
-        let manager = QueueManager.shared
+    private func buildQueueTab() -> CPListTemplate {
+        let template = CPListTemplate(title: "Queue", sections: [])
+        template.tabTitle = "Queue"
+        template.tabImage = UIImage(systemName: "list.bullet")
+        updateQueueTab(template)
+        return template
+    }
 
+    private func updateQueueTab(_ template: CPListTemplate) {
+        let manager = QueueManager.shared
         var sections: [CPListSection] = []
 
-        // Pending items
         if !manager.pendingItems.isEmpty {
             let items = manager.pendingItems.prefix(12).map { item in
                 let listItem = CPListItem(
@@ -94,7 +119,6 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             sections.append(CPListSection(items: Array(items), header: "Up Next", sectionIndexTitle: nil))
         }
 
-        // History items
         if !manager.historyItems.isEmpty {
             let items = manager.historyItems.prefix(8).map { item in
                 let listItem = CPListItem(
@@ -115,10 +139,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             sections.append(CPListSection(items: [emptyItem]))
         }
 
-        let listTemplate = CPListTemplate(title: "Queue", sections: sections)
-        listTemplate.tabTitle = "Queue"
-        listTemplate.tabImage = UIImage(systemName: "list.bullet")
-        return listTemplate
+        template.updateSections(sections)
     }
 
     private func buildServiceTab(for service: VideoService) -> CPTemplate {
@@ -135,7 +156,9 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         Task { @MainActor in
             do {
                 if let plexService = service as? PlexService {
+                    print("[CarPlay] Plex: fetching watchlist items...")
                     let watchlistItems = try await plexService.fetchWatchlistItems()
+                    print("[CarPlay] Plex: got \(watchlistItems.count) watchlist item(s)")
                     if watchlistItems.isEmpty {
                         let emptyItem = CPListItem(text: "Watchlist empty", detailText: "Add items at plex.tv")
                         listTemplate.updateSections([CPListSection(items: [emptyItem])])
@@ -168,6 +191,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
                     listTemplate.updateSections([CPListSection(items: items)])
                 }
             } catch {
+                print("[CarPlay] \(service.name): load failed — \(error)")
                 let errorItem = CPListItem(text: "Failed to load", detailText: error.localizedDescription)
                 listTemplate.updateSections([CPListSection(items: [errorItem])])
             }

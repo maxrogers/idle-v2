@@ -431,16 +431,20 @@ final class PlexService: VideoService {
 
     init() {
         config = Self.loadStoredConfig()
+        print("[Plex] init — isAuthenticated=\(config != nil), serverName=\(config?.serverName ?? "none")")
     }
 
     // MARK: - Authentication
 
     func authenticate() async throws {
+        print("[Plex] authenticate() called — loading stored config...")
         guard let config = Self.loadStoredConfig() else {
+            print("[Plex] authenticate() — no stored config found")
             throw PlexError.notConfigured
         }
         // Trust the stored config — server reachability is checked at connection time
         self.config = config
+        print("[Plex] authenticate() — loaded config: server=\(config.serverName) url=\(config.serverURL) user=\(config.selectedUserName ?? "admin")")
     }
 
     func signOut() {
@@ -527,9 +531,14 @@ final class PlexService: VideoService {
 
     /// Fetch the user's watchlist and resolve each item against the local server.
     func fetchWatchlistItems() async throws -> [VideoItem] {
-        guard let config = config else { throw PlexError.notConfigured }
+        guard let config = config else {
+            print("[Plex] fetchWatchlistItems() — not configured (config is nil)")
+            throw PlexError.notConfigured
+        }
+        print("[Plex] fetchWatchlistItems() — fetching from plex.tv with userToken prefix: \(String(config.userToken.prefix(8)))...")
 
         let watchlist = try await PlexWatchlist.fetchWatchlist(token: config.userToken)
+        print("[Plex] fetchWatchlistItems() — got \(watchlist.count) watchlist item(s) from plex.tv")
 
         // For each watchlist item, search the server for a matching title
         var videoItems: [VideoItem] = []
@@ -597,6 +606,10 @@ extension Notification.Name {
     /// Posted when Plex auth state changes (connected/disconnected).
     /// CarPlay listens to this to rebuild its tab bar.
     static let plexServiceAuthChanged = Notification.Name("idle.plexServiceAuthChanged")
+
+    /// Posted when the queue changes (items added, removed, status updated).
+    /// CarPlay listens to this to refresh the queue tab in-place.
+    static let queueDidChange = Notification.Name("idle.queueDidChange")
 }
 
 // MARK: - Errors

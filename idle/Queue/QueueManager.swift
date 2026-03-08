@@ -42,6 +42,7 @@ final class QueueManager: ObservableObject {
         modelContext?.insert(item)
         save()
         refresh()
+        NotificationCenter.default.post(name: .queueDidChange, object: nil)
     }
 
     func addFromURL(_ urlString: String, title: String? = nil, source: VideoSource = .generic) -> VideoItem {
@@ -59,24 +60,28 @@ final class QueueManager: ObservableObject {
         item.extractionStatus = .ready
         save()
         refresh()
+        NotificationCenter.default.post(name: .queueDidChange, object: nil)
     }
 
     func markAsPlayed(_ item: VideoItem) {
         item.playedAt = Date()
         save()
         refresh()
+        NotificationCenter.default.post(name: .queueDidChange, object: nil)
     }
 
     func markAsFailed(_ item: VideoItem) {
         item.extractionStatus = .failed
         save()
         refresh()
+        NotificationCenter.default.post(name: .queueDidChange, object: nil)
     }
 
     func removeItem(_ item: VideoItem) {
         modelContext?.delete(item)
         save()
         refresh()
+        NotificationCenter.default.post(name: .queueDidChange, object: nil)
     }
 
     func clearHistory() {
@@ -85,6 +90,7 @@ final class QueueManager: ObservableObject {
         }
         save()
         refresh()
+        NotificationCenter.default.post(name: .queueDidChange, object: nil)
     }
 
     // MARK: - Queries
