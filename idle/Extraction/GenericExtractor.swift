@@ -30,8 +30,11 @@ final class GenericExtractor: Sendable {
     // MARK: - Metadata Extraction
 
     private func extractFromMetadata(url: URL) async throws -> [StreamInfo] {
-        let (data, _) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await URLSession.shared.data(from: url)
         guard let html = String(data: data, encoding: .utf8) else { return [] }
+
+        // Use the final response URL as base for resolving relative links
+        let baseURL = (response as? HTTPURLResponse).flatMap { _ in response.url } ?? url
 
         var streams: [StreamInfo] = []
 
@@ -45,19 +48,60 @@ final class GenericExtractor: Sendable {
 
         for pattern in ogPatterns {
             if let videoURL = extractMetaContent(html: html, property: pattern),
-               let url = URL(string: videoURL),
+               let resolved = resolveURL(videoURL, base: baseURL),
                isVideoURL(videoURL) {
-                streams.append(StreamInfo(url: url))
+                streams.append(StreamInfo(url: resolved))
             }
         }
 
         // JSON-LD VideoObject
         if let videoURL = extractJSONLDVideo(html: html),
-           let url = URL(string: videoURL) {
-            streams.append(StreamInfo(url: url))
+           let resolved = resolveURL(videoURL, base: baseURL) {
+            streams.append(StreamInfo(url: resolved))
         }
 
+        // <video src="..."> and <source src="..."> tags
+        streams += extractVideoTags(html: html, base: baseURL)
+
+        // <a href="..."> links pointing directly to video files
+        streams += extractVideoLinks(html: html, base: baseURL)
+
         return streams
+    }
+
+    private func resolveURL(_ urlString: String, base: URL) -> URL? {
+        if let absolute = URL(string: urlString), absolute.scheme != nil {
+            return absolute
+        }
+        return URL(string: urlString, relativeTo: base)?.absoluteURL
+    }
+
+    private func extractVideoTags(html: String, base: URL) -> [StreamInfo] {
+        // Match <video src="..."> and <source src="...">
+        let pattern = "<(?:video|source)[^>]+src=[\"']([^\"']+)[\"']"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return [] }
+        let range = NSRange(html.startIndex..., in: html)
+        let matches = regex.matches(in: html, range: range)
+        return matches.compactMap { match -> StreamInfo? in
+            guard let r = Range(match.range(at: 1), in: html) else { return nil }
+            let src = String(html[r])
+            guard let url = resolveURL(src, base: base) else { return nil }
+            return StreamInfo(url: url)
+        }
+    }
+
+    private func extractVideoLinks(html: String, base: URL) -> [StreamInfo] {
+        // Match <a href="...video-extension...">
+        let pattern = "<a[^>]+href=[\"']([^\"']+\\.(?:mp4|m4v|mov|webm|m3u8|mpd)[^\"']*)[\"']"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return [] }
+        let range = NSRange(html.startIndex..., in: html)
+        let matches = regex.matches(in: html, range: range)
+        return matches.compactMap { match -> StreamInfo? in
+            guard let r = Range(match.range(at: 1), in: html) else { return nil }
+            let href = String(html[r])
+            guard let url = resolveURL(href, base: base) else { return nil }
+            return StreamInfo(url: url)
+        }
     }
 
     private func extractMetaContent(html: String, property: String) -> String? {

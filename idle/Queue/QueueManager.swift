@@ -14,8 +14,11 @@ final class QueueManager: ObservableObject {
     private var modelContext: ModelContext?
 
     private init() {
+        let t = Date()
+        print("[idle] ⏱ QueueManager.init start")
         setupSwiftData()
         refresh()
+        print("[idle] ⏱ QueueManager.init done \(Date().timeIntervalSince(t)*1000)ms")
     }
 
     // MARK: - Setup

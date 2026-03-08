@@ -5,10 +5,19 @@ struct idleApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        let t = Date()
+        print("[idle] ⏱ App.init start")
+        print("[idle] ⏱ App.init done \(Date().timeIntervalSince(t) * 1000)ms")
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.dark)
+                .onAppear {
+                    print("[idle] ⏱ ContentView appeared")
+                }
                 .onOpenURL { url in
                     URLSchemeHandler.shared.handle(url: url)
                 }

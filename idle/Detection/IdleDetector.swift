@@ -19,15 +19,22 @@ final class IdleDetector: ObservableObject {
     private let confirmationSeconds: Double = 3.0
 
     private init() {
-        startMonitoring()
+        // Defer motion monitoring so it doesn't block app launch.
+        // isIdle defaults to true so playback is allowed immediately.
+        Task { @MainActor in
+            self.startMonitoring()
+        }
     }
 
     // MARK: - Monitoring
 
     private func startMonitoring() {
+        let t = Date()
+        print("[idle] ⏱ IdleDetector.startMonitoring")
         guard CMMotionActivityManager.isActivityAvailable() else {
-            // Fallback to accelerometer
+            // Fallback to accelerometer (or no-op on simulator where neither is available)
             startAccelerometerFallback()
+            print("[idle] ⏱ IdleDetector ready (accelerometer fallback) \(Date().timeIntervalSince(t)*1000)ms")
             return
         }
 
@@ -37,6 +44,7 @@ final class IdleDetector: ObservableObject {
                 self?.handleActivity(activity)
             }
         }
+        print("[idle] ⏱ IdleDetector ready (activity manager) \(Date().timeIntervalSince(t)*1000)ms")
     }
 
     private func handleActivity(_ activity: CMMotionActivity) {
