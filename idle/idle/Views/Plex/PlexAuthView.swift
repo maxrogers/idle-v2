@@ -1,4 +1,7 @@
 import SwiftUI
+import os.log
+
+private let log = Logger(subsystem: "com.steverogers.idle", category: "PlexAuth")
 
 struct PlexAuthView: View {
     @Environment(ServiceRegistry.self) private var serviceRegistry
@@ -84,6 +87,8 @@ struct PlexAuthView: View {
         .task { await startPINFlow() }
         .sheet(isPresented: $showUserPicker) {
             PlexUserPickerView(users: homeUsers, authToken: authToken) {
+                // Enable service on successful user selection
+                serviceRegistry.setEnabled("plex", enabled: true)
                 complete()
                 NotificationCenter.default.post(name: .carPlayRebuildTabs, object: nil)
             }
@@ -120,8 +125,10 @@ struct PlexAuthView: View {
             pinID = id
             pinCode = code
             isPolling = true
+            log.info("PlexAuthView: PIN flow started id=\(id)")
             await pollForAuth()
         } catch {
+            log.error("PlexAuthView: requestPIN failed: \(error)")
             errorMessage = error.localizedDescription
         }
     }
@@ -139,10 +146,12 @@ struct PlexAuthView: View {
                 if let token = try await PlexAPI.shared.pollPIN(id: pinID) {
                     isPolling = false
                     authToken = token
+                    log.info("PlexAuthView: token received, loading home users")
                     await loadHomeUsers(token: token)
                     return
                 }
             } catch {
+                log.warning("PlexAuthView: poll error (will retry): \(error)")
                 // Continue polling on transient errors
             }
         }
@@ -154,21 +163,29 @@ struct PlexAuthView: View {
     private func loadHomeUsers(token: String) async {
         do {
             let users = try await PlexAPI.shared.getHomeUsers(token: token)
+            log.info("PlexAuthView: getHomeUsers returned \(users.count) users: \(users.map(\.title).joined(separator: ", "), privacy: .private)")
+
             if users.count <= 1 {
                 // Single user or no home users — save token directly and proceed
+                log.info("PlexAuthView: single/no-user path, saving token and enabling service")
                 KeychainHelper.save(key: "plex_auth_token", string: token)
                 KeychainHelper.save(key: "plex_user_token", string: token)
+                // Enable the service now that auth succeeded
+                serviceRegistry.setEnabled("plex", enabled: true)
                 await loadAndSaveServer(token: token)
                 complete()
                 NotificationCenter.default.post(name: .carPlayRebuildTabs, object: nil)
             } else {
+                log.info("PlexAuthView: multi-user path, showing picker with \(users.count) users")
                 homeUsers = users
                 showUserPicker = true
             }
         } catch {
+            log.error("PlexAuthView: getHomeUsers failed: \(error) — falling back to single-user")
             // Fallback: treat as single user
             KeychainHelper.save(key: "plex_auth_token", string: token)
             KeychainHelper.save(key: "plex_user_token", string: token)
+            serviceRegistry.setEnabled("plex", enabled: true)
             await loadAndSaveServer(token: token)
             complete()
         }
@@ -178,14 +195,17 @@ struct PlexAuthView: View {
     private func loadAndSaveServer(token: String) async {
         do {
             let servers = try await PlexAPI.shared.getServers(token: token)
+            log.info("PlexAuthView: getServers returned \(servers.count) servers")
             // Prefer local, non-relay connections; pick first available server
             if let server = servers.first,
                let connection = server.connections.first(where: { !$0.relay && $0.local })
                                 ?? server.connections.first(where: { !$0.relay })
                                 ?? server.connections.first {
+                log.info("PlexAuthView: saved server URL: \(connection.uri, privacy: .private)")
                 UserDefaults.standard.set(connection.uri, forKey: "plex_server_url")
             }
         } catch {
+            log.error("PlexAuthView: getServers failed: \(error)")
             // Server will be resolved later
         }
     }

@@ -90,6 +90,8 @@ struct ServiceRow: View {
     let service: any VideoServicePlugin
     let registry: ServiceRegistry
 
+    @State private var showSettings = false
+
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: service.iconSystemName)
@@ -109,6 +111,16 @@ struct ServiceRow: View {
 
             Spacer()
 
+            // Settings chevron — tapping opens re-auth / user-switch sheet
+            Button {
+                showSettings = true
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(IdleTheme.textTertiary)
+            }
+            .buttonStyle(.plain)
+
             Toggle("", isOn: Binding(
                 get: { registry.isEnabled(service.id) },
                 set: { registry.setEnabled(service.id, enabled: $0) }
@@ -117,6 +129,99 @@ struct ServiceRow: View {
             .labelsHidden()
         }
         .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .sheet(isPresented: $showSettings) {
+            ServiceSettingsSheet(service: service, registry: registry)
+        }
+    }
+}
+
+// MARK: - Service Settings Sheet
+
+struct ServiceSettingsSheet: View {
+    let service: any VideoServicePlugin
+    let registry: ServiceRegistry
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var navigatingToAuth = false
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                IdleTheme.background.ignoresSafeArea()
+
+                List {
+                    Section {
+                        // Re-authenticate / switch user
+                        Button {
+                            if service.id == "plex" {
+                                navigatingToAuth = true
+                            }
+                        } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: "person.badge.key.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(IdleTheme.amber)
+                                    .frame(width: 32)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Switch Account / User")
+                                        .foregroundStyle(IdleTheme.textPrimary)
+                                    Text(service.isAuthenticated ? "Re-authenticate or change home user" : "Sign in to \(service.displayName)")
+                                        .font(IdleTheme.captionFont)
+                                        .foregroundStyle(IdleTheme.textTertiary)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    Section {
+                        // Sign out
+                        Button(role: .destructive) {
+                            signOut()
+                        } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: "person.slash.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(.red)
+                                    .frame(width: 32)
+
+                                Text("Sign Out")
+                                    .foregroundStyle(.red)
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+            }
+            .navigationTitle(service.displayName)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Done") { dismiss() }
+                        .foregroundStyle(IdleTheme.amber)
+                }
+            }
+            .navigationDestination(isPresented: $navigatingToAuth) {
+                PlexAuthView(onComplete: { dismiss() })
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private func signOut() {
+        if service.id == "plex" {
+            KeychainHelper.delete(key: "plex_auth_token")
+            KeychainHelper.delete(key: "plex_user_token")
+            UserDefaults.standard.removeObject(forKey: "plex_server_url")
+        }
+        registry.setEnabled(service.id, enabled: false)
+        dismiss()
     }
 }
 
