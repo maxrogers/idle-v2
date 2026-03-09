@@ -15,22 +15,22 @@ struct PlexUserPickerView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if showingPINEntry, let user = selectedUser {
-                    pinEntryView(for: user)
-                } else {
-                    userListView
+            userListView
+                .navigationTitle("Who's Watching?")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Cancel") { dismiss() }
+                            .foregroundStyle(IdleTheme.textTertiary)
+                    }
                 }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationTitle("Who's Watching?")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundStyle(IdleTheme.textTertiary)
+                .navigationDestination(isPresented: $showingPINEntry) {
+                    if let user = selectedUser {
+                        pinEntryView(for: user)
+                            .navigationTitle("Enter PIN")
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
                 }
-            }
         }
         .presentationBackground(IdleTheme.background)
         .preferredColorScheme(.dark)

@@ -16,6 +16,22 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong, nullable) CPInterfaceController *interfaceController;
 
+// Explicitly declare both connect/disconnect variants so the CarPlay runtime's
+// respondsToSelector: check succeeds regardless of which variant it checks.
+- (void)templateApplicationScene:(CPTemplateApplicationScene *)templateApplicationScene
+   didConnectInterfaceController:(CPInterfaceController *)interfaceController;
+
+- (void)templateApplicationScene:(CPTemplateApplicationScene *)templateApplicationScene
+   didConnectInterfaceController:(CPInterfaceController *)interfaceController
+                        toWindow:(CPWindow *)window;
+
+- (void)templateApplicationScene:(CPTemplateApplicationScene *)templateApplicationScene
+didDisconnectInterfaceController:(CPInterfaceController *)interfaceController;
+
+- (void)templateApplicationScene:(CPTemplateApplicationScene *)templateApplicationScene
+didDisconnectInterfaceController:(CPInterfaceController *)interfaceController
+                      fromWindow:(CPWindow *)window;
+
 @end
 
 NS_ASSUME_NONNULL_END
