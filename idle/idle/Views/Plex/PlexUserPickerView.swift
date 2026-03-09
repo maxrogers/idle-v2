@@ -15,17 +15,15 @@ struct PlexUserPickerView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                IdleTheme.background.ignoresSafeArea()
-
-                VStack(spacing: 0) {
-                    if showingPINEntry, let user = selectedUser {
-                        pinEntryView(for: user)
-                    } else {
-                        userListView
-                    }
+            Group {
+                if showingPINEntry, let user = selectedUser {
+                    pinEntryView(for: user)
+                } else {
+                    userListView
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(IdleTheme.background.ignoresSafeArea())
             .navigationTitle("Who's Watching?")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
