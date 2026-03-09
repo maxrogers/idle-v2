@@ -16,6 +16,8 @@
 			<key>CPTemplateApplicationSceneSessionRoleApplication</key>
 			<array>
 				<dict>
+					<key>UISceneClassName</key>
+					<string>CPTemplateApplicationScene</string>
 					<key>UISceneConfigurationName</key>
 					<string>CarPlay</string>
 					<key>UISceneDelegateClassName</key>
@@ -40,5 +42,9 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>idle needs local network access to discover Plex servers and advertise as a cast target.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>idle uses your location to detect when you are parked and unlock full video playback.</string>
 </dict>
 </plist>

@@ -14,7 +14,13 @@ struct idleApp: App {
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([QueueItem.self])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        // Explicitly store in the app's private Application Support directory.
+        // Without a URL, SwiftData resolves to the App Group container which
+        // lacks an Application Support subdirectory, causing a 30s startup delay.
+        let appSupportURL = FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let storeURL = appSupportURL.appendingPathComponent("idle.store")
+        let modelConfiguration = ModelConfiguration(schema: schema, url: storeURL)
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
