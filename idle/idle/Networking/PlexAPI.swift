@@ -85,54 +85,27 @@ actor PlexAPI {
             log.debug("getHomeUsers raw response: \(raw, privacy: .private)")
         }
 
-        // v2/home/users returns: { "MediaContainer": { "users": [...] } }
-        // OR a direct array, OR just { "users": [...] }
-        struct HomeUsersRoot: Codable {
+        // v2/home/users returns a flat object:
+        //   { "id": 102361, "name": "...", "users": [ { "id":5810, "title":"...", ... } ] }
+        // The extra fields (id, name, guestUserID, etc.) must be tolerated via CodingKeys.
+        struct HomeResponse: Codable {
             let users: [PlexUser]?
-        }
-        struct MediaContainerRoot: Codable {
-            let mediaContainer: HomeUsersRoot?
-            enum CodingKeys: String, CodingKey {
-                case mediaContainer = "MediaContainer"
-            }
+            // Intentionally only decoding the fields we need; Codable ignores the rest.
+            enum CodingKeys: String, CodingKey { case users }
         }
 
-        // Try direct array
-        if let users = try? JSONDecoder().decode([PlexUser].self, from: data), !users.isEmpty {
-            log.info("getHomeUsers: decoded as direct array, count=\(users.count)")
-            return users
-        }
-        // Try { users: [...] }
-        if let root = try? JSONDecoder().decode(HomeUsersRoot.self, from: data),
+        let decoder = JSONDecoder()
+        if let root = try? decoder.decode(HomeResponse.self, from: data),
            let users = root.users, !users.isEmpty {
-            log.info("getHomeUsers: decoded as HomeUsersRoot, count=\(users.count)")
-            return users
-        }
-        // Try { MediaContainer: { users: [...] } }
-        if let root = try? JSONDecoder().decode(MediaContainerRoot.self, from: data),
-           let users = root.mediaContainer?.users, !users.isEmpty {
-            log.info("getHomeUsers: decoded as MediaContainerRoot, count=\(users.count)")
+            log.info("getHomeUsers: decoded \(users.count) users from home response")
             return users
         }
 
-        // Fallback: try /api/v2/users (returns all friends/managed users)
-        log.info("getHomeUsers: home/users empty, trying /api/v2/users")
-        return try await getManagedUsers(token: token)
-    }
-
-    private func getManagedUsers(token: String) async throws -> [PlexUser] {
-        var request = URLRequest(url: URL(string: "\(baseURL)/api/v2/users")!)
-        for (key, value) in headers { request.setValue(value, forHTTPHeaderField: key) }
-        request.setValue(token, forHTTPHeaderField: "X-Plex-Token")
-
-        let (data, _) = try await session.data(for: request)
-        if let raw = String(data: data, encoding: .utf8) {
-            log.debug("getManagedUsers raw response: \(raw, privacy: .private)")
-        }
-
-        if let users = try? JSONDecoder().decode([PlexUser].self, from: data) {
-            log.info("getManagedUsers: decoded \(users.count) users")
-            return users
+        // Log what we got if decoding failed
+        if let root = try? decoder.decode(HomeResponse.self, from: data) {
+            log.warning("getHomeUsers: HomeResponse decoded but users=\(root.users?.count ?? -1)")
+        } else {
+            log.warning("getHomeUsers: HomeResponse decode failed entirely")
         }
         return []
     }

@@ -21,7 +21,8 @@ nonisolated struct PlexUser: Codable, Identifiable, Sendable {
     let title: String
     let thumb: String?
     let protected: Bool
-    let home: Bool
+    // "home" is only present in the /users endpoint, not /home/users
+    let home: Bool?
 
     enum CodingKeys: String, CodingKey {
         case id, uuid, title, thumb

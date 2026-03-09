@@ -8,25 +8,31 @@ private let log = Logger(subsystem: "com.steverogers.idle", category: "CarPlayDe
 //
 // CRITICAL NOTES on actor isolation and Obj-C interop:
 //
-// 1. SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor makes this class implicitly @MainActor.
+// 1. SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor makes all classes implicitly @MainActor.
 //    CPTemplateApplicationSceneDelegate is an Obj-C protocol. The CarPlay runtime calls
-//    the lifecycle selectors before the main runloop is ready for actor-isolated dispatch,
-//    so any Swift actor wrapper around the IMP causes the selector lookup to fail, throwing:
-//    "Application does not implement CarPlay template application lifecycle methods"
+//    the lifecycle selectors synchronously before the main runloop is ready for actor-
+//    isolated dispatch, so any Swift actor wrapper around the IMP causes the selector
+//    lookup to fail: "Application does not implement CarPlay template application
+//    lifecycle methods in its scene delegate."
 //
-// 2. Fix: mark every protocol method `nonisolated` so Swift registers a bare Obj-C IMP
-//    with no actor wrapper. Dispatch to @MainActor explicitly inside.
+// 2. Fix (two-part):
+//    a) Mark stored properties `nonisolated(unsafe)` — this removes MainActor isolation
+//       from the *class*, so Swift no longer wraps the Obj-C IMPs in an actor check.
+//    b) Mark every protocol method `nonisolated` so the bare IMP is registered.
+//    Then dispatch to @MainActor explicitly inside each method body.
 //
-// 3. Do NOT add @objc(SomeName) to this class. The Info.plist UISceneDelegateClassName
-//    is NOT used here (AppDelegate.configurationForConnecting sets delegateClass
-//    programmatically), but the Obj-C runtime still looks up the class by its Swift
-//    module-qualified name "idle.CarPlaySceneDelegate". Renaming it with @objc() breaks
-//    that lookup and prevents the scene from being created at all.
+// 3. UISceneDelegateClassName in Info.plist must be "idle.CarPlaySceneDelegate".
+//    AppDelegate.configurationForConnecting also sets delegateClass programmatically
+//    as a belt-and-suspenders measure.
 
 class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
 
-    var interfaceController: CPInterfaceController?
-    private var tabManager: CarPlayTabManager?
+    // nonisolated(unsafe) removes @MainActor from these stored properties, which in turn
+    // removes the actor isolation from the class itself. Without this, Swift generates
+    // actor-executor-checked IMPs for all Obj-C protocol methods, causing the CarPlay
+    // runtime's selector lookup to fail even when the methods are marked `nonisolated`.
+    nonisolated(unsafe) var interfaceController: CPInterfaceController?
+    nonisolated(unsafe) private var tabManager: CarPlayTabManager?
 
     // MARK: - CPTemplateApplicationSceneDelegate
 
