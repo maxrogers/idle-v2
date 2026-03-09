@@ -67,6 +67,33 @@ Task { [weak self] in
 
 ## CarPlay APIs
 
+### Info.plist must include UISceneClassName for CarPlay scenes
+**Problem:** CarPlay crashes at launch with:
+`"Application does not implement CarPlay template application lifecycle methods in its scene delegate."`
+
+**Root cause:** The `CPTemplateApplicationSceneSessionRoleApplication` scene config in Info.plist
+is missing `UISceneClassName`. Without it, the CarPlay framework cannot instantiate
+`CPTemplateApplicationScene` and bind it to the delegate.
+
+**Fix:** Add `UISceneClassName = CPTemplateApplicationScene` to the Info.plist entry:
+```xml
+<key>CPTemplateApplicationSceneSessionRoleApplication</key>
+<array>
+    <dict>
+        <key>UISceneClassName</key>
+        <string>CPTemplateApplicationScene</string>
+        <key>UISceneConfigurationName</key>
+        <string>CarPlay</string>
+        <key>UISceneDelegateClassName</key>
+        <string>MyApp.CarPlaySceneDelegate</string>
+    </dict>
+</array>
+```
+All three keys are required. The crash error message is misleading — the delegate methods are
+implemented, but the scene itself isn't created because the class name is missing.
+
+---
+
 ### CPTemplateApplicationSceneDelegate disconnect method signature
 **Wrong:**
 ```swift
@@ -176,6 +203,31 @@ Best practice: prefer local connections that are non-relay for lowest latency:
 ```swift
 server.connections.first(where: { !$0.relay }) ?? server.connections.first
 ```
+
+---
+
+## SwiftData
+
+### SwiftData with App Group entitlement causes 30s startup delay
+**Problem:** App shows white screen for 30 seconds at launch. Console shows:
+```
+CoreData: error: Failed to stat path '.../AppGroup/.../Application Support/default.store', errno 2
+CoreData: error: Sandbox access to file-write-create denied
+```
+**Root cause:** When an app group entitlement is present, `ModelConfiguration` with no explicit
+URL defaults to storing the database in the App Group container. The `Application Support`
+subdirectory doesn't exist there yet, CoreData spends ~30 seconds attempting recovery, then
+eventually creates it. Subsequent launches are fast, but first launch is broken.
+
+**Fix:** Always provide an explicit URL pointing to the app's private container:
+```swift
+let appSupportURL = FileManager.default
+    .urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+let storeURL = appSupportURL.appendingPathComponent("MyApp.store")
+let config = ModelConfiguration(schema: schema, url: storeURL)
+```
+This bypasses the App Group path entirely and stores in the app's sandboxed
+`Application Support` directory which always exists.
 
 ---
 
