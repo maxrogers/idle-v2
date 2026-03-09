@@ -11,23 +11,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     let playbackEngine = PlaybackEngine()
 
     // MARK: - Scene Configuration
-
-    func application(
-        _ application: UIApplication,
-        configurationForConnecting connectingSceneSession: UISceneSession,
-        options: UIScene.ConnectionOptions
-    ) -> UISceneConfiguration {
-        if connectingSceneSession.role == .carTemplateApplication {
-            let config = UISceneConfiguration(
-                name: "CarPlay",
-                sessionRole: .carTemplateApplication
-            )
-            config.delegateClass = CarPlaySceneDelegate.self
-            return config
-        }
-        return UISceneConfiguration(
-            name: "Default",
-            sessionRole: connectingSceneSession.role
-        )
-    }
+    // Note: CarPlay scene delegate is configured entirely via Info.plist
+    // (CPTemplateApplicationSceneSessionRoleApplication → CarPlaySceneDelegate).
+    // We do NOT override configurationForConnecting for CarPlay — doing so
+    // causes Swift to reference the class through its Swift type metadata,
+    // which can interfere with the Obj-C IMP registration we depend on.
 }

@@ -23,7 +23,6 @@ struct PlexUserPickerView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(IdleTheme.background.ignoresSafeArea())
             .navigationTitle("Who's Watching?")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -33,6 +32,7 @@ struct PlexUserPickerView: View {
                 }
             }
         }
+        .presentationBackground(IdleTheme.background)
         .preferredColorScheme(.dark)
     }
 
