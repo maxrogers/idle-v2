@@ -41,48 +41,54 @@ struct PlexUserPickerView: View {
     // MARK: - User List
 
     private var userListView: some View {
-        List(users) { user in
-            Button {
-                selectUser(user)
-            } label: {
-                HStack(spacing: 14) {
-                    // Avatar placeholder
-                    Circle()
-                        .fill(IdleTheme.surfacePrimary)
-                        .frame(width: 44, height: 44)
-                        .overlay {
-                            if let thumb = user.thumb, let url = URL(string: thumb) {
-                                AsyncImage(url: url) { image in
-                                    image.resizable().scaledToFill()
-                                } placeholder: {
-                                    Image(systemName: "person.fill")
-                                        .foregroundStyle(IdleTheme.textTertiary)
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(users) { user in
+                    Button {
+                        selectUser(user)
+                    } label: {
+                        HStack(spacing: 14) {
+                            Circle()
+                                .fill(IdleTheme.surfacePrimary)
+                                .frame(width: 44, height: 44)
+                                .overlay {
+                                    if let thumb = user.thumb, let url = URL(string: thumb) {
+                                        AsyncImage(url: url) { image in
+                                            image.resizable().scaledToFill()
+                                        } placeholder: {
+                                            Image(systemName: "person.fill")
+                                                .foregroundStyle(IdleTheme.textTertiary)
+                                        }
+                                        .clipShape(Circle())
+                                    } else {
+                                        Image(systemName: "person.fill")
+                                            .foregroundStyle(IdleTheme.textTertiary)
+                                    }
                                 }
-                                .clipShape(Circle())
-                            } else {
-                                Image(systemName: "person.fill")
+
+                            Text(user.title)
+                                .foregroundStyle(IdleTheme.textPrimary)
+                                .font(IdleTheme.headlineFont)
+
+                            Spacer()
+
+                            if user.protected {
+                                Image(systemName: "lock.fill")
                                     .foregroundStyle(IdleTheme.textTertiary)
+                                    .font(.caption)
                             }
                         }
-
-                    Text(user.title)
-                        .foregroundStyle(IdleTheme.textPrimary)
-                        .font(IdleTheme.headlineFont)
-
-                    Spacer()
-
-                    if user.protected {
-                        Image(systemName: "lock.fill")
-                            .foregroundStyle(IdleTheme.textTertiary)
-                            .font(.caption)
+                        .padding(.horizontal)
+                        .padding(.vertical, 14)
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
+
+                    Divider()
+                        .background(IdleTheme.surfacePrimary)
                 }
-                .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
     }
 
     // MARK: - PIN Entry

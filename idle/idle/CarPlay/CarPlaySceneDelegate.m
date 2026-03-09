@@ -6,7 +6,7 @@
 // MARK: - CPTemplateApplicationSceneDelegate
 
 - (void)templateApplicationScene:(CPTemplateApplicationScene *)templateApplicationScene
-       didConnectInterfaceController:(CPInterfaceController *)interfaceController {
+              didConnect:(CPInterfaceController *)interfaceController {
     self.interfaceController = interfaceController;
     interfaceController.delegate = self;
     [CarPlayBridge didConnectWithInterfaceController:interfaceController delegate:self];
