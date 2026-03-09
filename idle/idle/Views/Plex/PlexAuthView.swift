@@ -4,6 +4,10 @@ struct PlexAuthView: View {
     @Environment(ServiceRegistry.self) private var serviceRegistry
     @Environment(\.dismiss) private var dismiss
 
+    /// Called on successful auth (or cancel) when pushed via navigationDestination.
+    /// Falls back to dismiss() when nil (standalone sheet presentation).
+    var onComplete: (() -> Void)? = nil
+
     @State private var pinCode: String = ""
     @State private var pinID: Int = 0
     @State private var isPolling = false
@@ -13,77 +17,85 @@ struct PlexAuthView: View {
     @State private var homeUsers: [PlexUser] = []
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                IdleTheme.background.ignoresSafeArea()
+        ZStack {
+            IdleTheme.background.ignoresSafeArea()
 
-                VStack(spacing: 40) {
-                    Spacer()
+            VStack(spacing: 40) {
+                Spacer()
 
-                    // Logo
-                    Image(systemName: "play.rectangle.fill")
-                        .font(.system(size: 64))
-                        .foregroundStyle(IdleTheme.amber)
+                // Logo
+                Image(systemName: "play.rectangle.fill")
+                    .font(.system(size: 64))
+                    .foregroundStyle(IdleTheme.amber)
 
-                    // Instruction
-                    VStack(spacing: 12) {
-                        Text("Link Your Plex Account")
-                            .font(.title2.bold())
-                            .foregroundStyle(IdleTheme.textPrimary)
+                // Instruction
+                VStack(spacing: 12) {
+                    Text("Link Your Plex Account")
+                        .font(.title2.bold())
+                        .foregroundStyle(IdleTheme.textPrimary)
 
-                        Text("Visit plex.tv/link on any browser and enter this code:")
-                            .font(IdleTheme.bodyFont)
-                            .foregroundStyle(IdleTheme.textSecondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
-
-                    // PIN display
-                    if pinCode.isEmpty {
-                        ProgressView()
-                            .tint(IdleTheme.amber)
-                            .scaleEffect(1.5)
-                    } else {
-                        Text(formattedPIN)
-                            .font(.system(size: 48, weight: .bold, design: .monospaced))
-                            .foregroundStyle(IdleTheme.amber)
-                            .tracking(12)
-                    }
-
-                    // Status
-                    if let error = errorMessage {
-                        Text(error)
-                            .font(IdleTheme.captionFont)
-                            .foregroundStyle(.red)
-                            .multilineTextAlignment(.center)
-                    } else if isPolling {
-                        HStack(spacing: 8) {
-                            ProgressView()
-                                .tint(IdleTheme.textSecondary)
-                                .scaleEffect(0.8)
-                            Text("Waiting for authorization…")
-                                .font(IdleTheme.captionFont)
-                                .foregroundStyle(IdleTheme.textSecondary)
-                        }
-                    }
-
-                    Spacer()
-
-                    Button("Cancel") { dismiss() }
-                        .foregroundStyle(IdleTheme.textTertiary)
-                        .padding(.bottom)
+                    Text("Visit plex.tv/link on any browser and enter this code:")
+                        .font(IdleTheme.bodyFont)
+                        .foregroundStyle(IdleTheme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
                 }
-                .padding()
+
+                // PIN display
+                if pinCode.isEmpty {
+                    ProgressView()
+                        .tint(IdleTheme.amber)
+                        .scaleEffect(1.5)
+                } else {
+                    Text(formattedPIN)
+                        .font(.system(size: 48, weight: .bold, design: .monospaced))
+                        .foregroundStyle(IdleTheme.amber)
+                        .tracking(12)
+                }
+
+                // Status
+                if let error = errorMessage {
+                    Text(error)
+                        .font(IdleTheme.captionFont)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                } else if isPolling {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .tint(IdleTheme.textSecondary)
+                            .scaleEffect(0.8)
+                        Text("Waiting for authorization…")
+                            .font(IdleTheme.captionFont)
+                            .foregroundStyle(IdleTheme.textSecondary)
+                    }
+                }
+
+                Spacer()
+
+                Button("Cancel") { complete() }
+                    .foregroundStyle(IdleTheme.textTertiary)
+                    .padding(.bottom)
             }
-            .navigationBarHidden(true)
+            .padding()
         }
+        .navigationTitle("Connect Plex")
+        .navigationBarTitleDisplayMode(.inline)
         .preferredColorScheme(.dark)
         .task { await startPINFlow() }
         .sheet(isPresented: $showUserPicker) {
             PlexUserPickerView(users: homeUsers, authToken: authToken) {
-                dismiss()
+                complete()
                 NotificationCenter.default.post(name: .carPlayRebuildTabs, object: nil)
             }
+        }
+    }
+
+    private func complete() {
+        isPolling = false
+        if let onComplete {
+            onComplete()
+        } else {
+            dismiss()
         }
     }
 
@@ -147,7 +159,7 @@ struct PlexAuthView: View {
                 KeychainHelper.save(key: "plex_auth_token", string: token)
                 KeychainHelper.save(key: "plex_user_token", string: token)
                 await loadAndSaveServer(token: token)
-                dismiss()
+                complete()
                 NotificationCenter.default.post(name: .carPlayRebuildTabs, object: nil)
             } else {
                 homeUsers = users
@@ -158,7 +170,7 @@ struct PlexAuthView: View {
             KeychainHelper.save(key: "plex_auth_token", string: token)
             KeychainHelper.save(key: "plex_user_token", string: token)
             await loadAndSaveServer(token: token)
-            dismiss()
+            complete()
         }
     }
 

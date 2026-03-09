@@ -126,6 +126,8 @@ struct AddServiceSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(ServiceRegistry.self) private var serviceRegistry
 
+    @State private var navigatingToPlexAuth = false
+
     // Known available services
     private let availableServices: [(id: String, name: String, icon: String)] = [
         ("plex", "Plex", "play.rectangle.fill")
@@ -140,8 +142,12 @@ struct AddServiceSheet: View {
                     ForEach(availableServices, id: \.id) { service in
                         if !serviceRegistry.services.contains(where: { $0.id == service.id }) {
                             Button {
-                                addService(service.id)
-                                dismiss()
+                                if service.id == "plex" {
+                                    // Register first so PlexAuthView can save state against it,
+                                    // then navigate into the auth flow
+                                    serviceRegistry.register(PlexService())
+                                    navigatingToPlexAuth = true
+                                }
                             } label: {
                                 HStack(spacing: 14) {
                                     Image(systemName: service.icon)
@@ -149,8 +155,13 @@ struct AddServiceSheet: View {
                                         .foregroundStyle(IdleTheme.amber)
                                         .frame(width: 32)
 
-                                    Text(service.name)
-                                        .foregroundStyle(IdleTheme.textPrimary)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(service.name)
+                                            .foregroundStyle(IdleTheme.textPrimary)
+                                        Text("Sign in via plex.tv/link")
+                                            .font(IdleTheme.captionFont)
+                                            .foregroundStyle(IdleTheme.textTertiary)
+                                    }
                                 }
                                 .padding(.vertical, 4)
                             }
@@ -168,17 +179,11 @@ struct AddServiceSheet: View {
                         .foregroundStyle(IdleTheme.amber)
                 }
             }
+            .navigationDestination(isPresented: $navigatingToPlexAuth) {
+                PlexAuthView(onComplete: { dismiss() })
+            }
         }
         .preferredColorScheme(.dark)
-    }
-
-    private func addService(_ id: String) {
-        switch id {
-        case "plex":
-            serviceRegistry.register(PlexService())
-        default:
-            break
-        }
     }
 }
 

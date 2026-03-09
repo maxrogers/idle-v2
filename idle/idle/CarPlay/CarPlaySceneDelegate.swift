@@ -7,35 +7,45 @@ class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
     private var tabManager: CarPlayTabManager?
 
     // MARK: - CPTemplateApplicationSceneDelegate
+    //
+    // These methods MUST be nonisolated. With SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor
+    // the class is MainActor-isolated by default, but CPTemplateApplicationSceneDelegate
+    // is an Obj-C protocol whose methods are called by the CarPlay runtime from a
+    // non-MainActor context. Without nonisolated the Obj-C runtime can't find the
+    // selector and the app crashes with "does not implement CarPlay lifecycle methods".
 
-    func templateApplicationScene(
+    nonisolated func templateApplicationScene(
         _ templateApplicationScene: CPTemplateApplicationScene,
         didConnect interfaceController: CPInterfaceController
     ) {
-        self.interfaceController = interfaceController
-        interfaceController.delegate = self
+        Task { @MainActor in
+            self.interfaceController = interfaceController
+            interfaceController.delegate = self
 
-        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+            guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
 
-        let manager = CarPlayTabManager(
-            interfaceController: interfaceController,
-            serviceRegistry: appDelegate.serviceRegistry,
-            queueManager: appDelegate.queueManager,
-            playbackEngine: appDelegate.playbackEngine
-        )
-        tabManager = manager
-        manager.buildAndSetRoot()
+            let manager = CarPlayTabManager(
+                interfaceController: interfaceController,
+                serviceRegistry: appDelegate.serviceRegistry,
+                queueManager: appDelegate.queueManager,
+                playbackEngine: appDelegate.playbackEngine
+            )
+            self.tabManager = manager
+            manager.buildAndSetRoot()
 
-        NotificationCenter.default.post(name: .carPlayDidConnect, object: nil)
+            NotificationCenter.default.post(name: .carPlayDidConnect, object: nil)
+        }
     }
 
-    func templateApplicationScene(
+    nonisolated func templateApplicationScene(
         _ templateApplicationScene: CPTemplateApplicationScene,
         didDisconnectInterfaceController interfaceController: CPInterfaceController
     ) {
-        self.interfaceController = nil
-        tabManager = nil
-        NotificationCenter.default.post(name: .carPlayDidDisconnect, object: nil)
+        Task { @MainActor in
+            self.interfaceController = nil
+            self.tabManager = nil
+            NotificationCenter.default.post(name: .carPlayDidDisconnect, object: nil)
+        }
     }
 }
 
