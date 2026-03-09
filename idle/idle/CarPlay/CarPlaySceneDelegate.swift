@@ -6,20 +6,23 @@ private let log = Logger(subsystem: "com.steverogers.idle", category: "CarPlayDe
 
 // MARK: - CarPlaySceneDelegate
 //
-// This class MUST NOT be implicitly @MainActor-isolated (the project default).
-// CPTemplateApplicationSceneDelegate is an Obj-C protocol; the CarPlay runtime calls
-// templateApplicationScene:didConnectInterfaceController: from its own internal thread,
-// not the main thread. With SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor the Swift runtime
-// wraps every method in a MainActor hop — but for @objc methods called from Obj-C, the
-// runtime looks up the selector at the Obj-C level. If the selector is wrapped in an
-// actor executor check, the Obj-C bridge cannot find a plain IMP and throws:
-//   "Application does not implement CarPlay template application lifecycle methods"
+// CRITICAL NOTES on actor isolation and Obj-C interop:
 //
-// Solution: Annotate the class with @objc(CarPlaySceneDelegate) and mark every
-// protocol-conformance method @objc nonisolated so they are registered as plain Obj-C
-// IMPs without any Swift actor wrapper. MainActor work is dispatched explicitly inside.
+// 1. SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor makes this class implicitly @MainActor.
+//    CPTemplateApplicationSceneDelegate is an Obj-C protocol. The CarPlay runtime calls
+//    the lifecycle selectors before the main runloop is ready for actor-isolated dispatch,
+//    so any Swift actor wrapper around the IMP causes the selector lookup to fail, throwing:
+//    "Application does not implement CarPlay template application lifecycle methods"
+//
+// 2. Fix: mark every protocol method `nonisolated` so Swift registers a bare Obj-C IMP
+//    with no actor wrapper. Dispatch to @MainActor explicitly inside.
+//
+// 3. Do NOT add @objc(SomeName) to this class. The Info.plist UISceneDelegateClassName
+//    is NOT used here (AppDelegate.configurationForConnecting sets delegateClass
+//    programmatically), but the Obj-C runtime still looks up the class by its Swift
+//    module-qualified name "idle.CarPlaySceneDelegate". Renaming it with @objc() breaks
+//    that lookup and prevents the scene from being created at all.
 
-@objc(CarPlaySceneDelegate)
 class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
 
     var interfaceController: CPInterfaceController?
@@ -27,13 +30,13 @@ class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
 
     // MARK: - CPTemplateApplicationSceneDelegate
 
-    @objc nonisolated func templateApplicationScene(
+    nonisolated func templateApplicationScene(
         _ templateApplicationScene: CPTemplateApplicationScene,
         didConnect interfaceController: CPInterfaceController
     ) {
-        log.info("CarPlay: templateApplicationScene didConnect")
+        log.info("CarPlay: templateApplicationScene didConnect — dispatching to MainActor")
         Task { @MainActor in
-            log.info("CarPlay: setting up tab manager")
+            log.info("CarPlay: MainActor setup start")
             self.interfaceController = interfaceController
             interfaceController.delegate = self
 
@@ -50,13 +53,13 @@ class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
             )
             self.tabManager = manager
             manager.buildAndSetRoot()
-            log.info("CarPlay: tab manager built")
+            log.info("CarPlay: tab manager built successfully")
 
             NotificationCenter.default.post(name: .carPlayDidConnect, object: nil)
         }
     }
 
-    @objc nonisolated func templateApplicationScene(
+    nonisolated func templateApplicationScene(
         _ templateApplicationScene: CPTemplateApplicationScene,
         didDisconnectInterfaceController interfaceController: CPInterfaceController
     ) {
@@ -72,10 +75,10 @@ class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
 // MARK: - CPInterfaceControllerDelegate
 
 extension CarPlaySceneDelegate: CPInterfaceControllerDelegate {
-    @objc nonisolated func templateWillAppear(_ aTemplate: CPTemplate, animated: Bool) {}
-    @objc nonisolated func templateDidAppear(_ aTemplate: CPTemplate, animated: Bool) {}
-    @objc nonisolated func templateWillDisappear(_ aTemplate: CPTemplate, animated: Bool) {}
-    @objc nonisolated func templateDidDisappear(_ aTemplate: CPTemplate, animated: Bool) {}
+    nonisolated func templateWillAppear(_ aTemplate: CPTemplate, animated: Bool) {}
+    nonisolated func templateDidAppear(_ aTemplate: CPTemplate, animated: Bool) {}
+    nonisolated func templateWillDisappear(_ aTemplate: CPTemplate, animated: Bool) {}
+    nonisolated func templateDidDisappear(_ aTemplate: CPTemplate, animated: Bool) {}
 }
 
 // MARK: - Notification Names

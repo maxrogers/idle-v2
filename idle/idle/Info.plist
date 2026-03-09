@@ -20,8 +20,6 @@
 					<string>CPTemplateApplicationScene</string>
 					<key>UISceneConfigurationName</key>
 					<string>CarPlay</string>
-					<key>UISceneDelegateClassName</key>
-					<string>idle.CarPlaySceneDelegate</string>
 				</dict>
 			</array>
 		</dict>
