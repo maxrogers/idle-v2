@@ -52,10 +52,12 @@ class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
 // MARK: - CPInterfaceControllerDelegate
 
 extension CarPlaySceneDelegate: CPInterfaceControllerDelegate {
-    func templateWillAppear(_ aTemplate: CPTemplate, animated: Bool) {}
-    func templateDidAppear(_ aTemplate: CPTemplate, animated: Bool) {}
-    func templateWillDisappear(_ aTemplate: CPTemplate, animated: Bool) {}
-    func templateDidDisappear(_ aTemplate: CPTemplate, animated: Bool) {}
+    // Also nonisolated — CPInterfaceControllerDelegate is an Obj-C protocol called
+    // from a non-MainActor context; same reasoning as the lifecycle methods above.
+    nonisolated func templateWillAppear(_ aTemplate: CPTemplate, animated: Bool) {}
+    nonisolated func templateDidAppear(_ aTemplate: CPTemplate, animated: Bool) {}
+    nonisolated func templateWillDisappear(_ aTemplate: CPTemplate, animated: Bool) {}
+    nonisolated func templateDidDisappear(_ aTemplate: CPTemplate, animated: Bool) {}
 }
 
 // MARK: - Notification Names

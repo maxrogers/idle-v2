@@ -40,6 +40,13 @@ final class ServiceRegistry {
         persistState()
     }
 
+    func remove(_ serviceID: String) {
+        services.removeAll { $0.id == serviceID }
+        serviceOrder.removeAll { $0 == serviceID }
+        enabledServiceIDs.remove(serviceID)
+        persistState()
+    }
+
     func moveService(from source: IndexSet, to destination: Int) {
         serviceOrder.move(fromOffsets: source, toOffset: destination)
         persistState()

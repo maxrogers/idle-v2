@@ -70,7 +70,7 @@ struct ServicesView: View {
                 .onDelete { indexSet in
                     let ids = indexSet.map { serviceRegistry.serviceOrder[$0] }
                     for id in ids {
-                        serviceRegistry.setEnabled(id, enabled: false)
+                        serviceRegistry.remove(id)
                     }
                 }
             } footer: {

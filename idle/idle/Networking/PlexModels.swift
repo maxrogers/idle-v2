@@ -6,10 +6,12 @@ nonisolated struct PlexPINResponse: Codable, Sendable {
     let id: Int
     let code: String
     let authToken: String?
+    let expiresAt: String?
 
     enum CodingKeys: String, CodingKey {
         case id, code
         case authToken = "authToken"
+        case expiresAt = "expiresAt"
     }
 }
 

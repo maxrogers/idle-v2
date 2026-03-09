@@ -1,6 +1,9 @@
 import Foundation
+import os.log
 
 // MARK: - Plex API Actor
+
+private let log = Logger(subsystem: "com.steverogers.idle", category: "PlexAPI")
 
 actor PlexAPI {
 
@@ -37,22 +40,39 @@ actor PlexAPI {
     // MARK: - Authentication
 
     func requestPIN() async throws -> (id: Int, code: String) {
+        log.info("requestPIN: using clientID=\(self.clientID, privacy: .private)")
         var request = URLRequest(url: URL(string: "\(baseURL)/api/v2/pins")!)
         request.httpMethod = "POST"
         for (key, value) in headers { request.setValue(value, forHTTPHeaderField: key) }
-        request.setValue("strong", forHTTPHeaderField: "X-Plex-Client-Identifier")
+        // NOTE: do NOT override X-Plex-Client-Identifier here — it must match the
+        // clientID used when polling, otherwise Plex returns authToken=null forever.
 
-        let (data, _) = try await session.data(for: request)
-        let response = try JSONDecoder().decode(PlexPINResponse.self, from: data)
-        return (response.id, response.code)
+        let (data, response) = try await session.data(for: request)
+        if let http = response as? HTTPURLResponse {
+            log.info("requestPIN: HTTP \(http.statusCode)")
+        }
+        if let raw = String(data: data, encoding: .utf8) {
+            log.debug("requestPIN response: \(raw, privacy: .private)")
+        }
+        let pin = try JSONDecoder().decode(PlexPINResponse.self, from: data)
+        log.info("requestPIN: got id=\(pin.id) code=\(pin.code, privacy: .private)")
+        return (pin.id, pin.code)
     }
 
     func pollPIN(id: Int) async throws -> String? {
         var request = URLRequest(url: URL(string: "\(baseURL)/api/v2/pins/\(id)")!)
         for (key, value) in headers { request.setValue(value, forHTTPHeaderField: key) }
-        let (data, _) = try await session.data(for: request)
-        let response = try JSONDecoder().decode(PlexPINResponse.self, from: data)
-        return response.authToken
+        let (data, response) = try await session.data(for: request)
+        if let http = response as? HTTPURLResponse, http.statusCode >= 400 {
+            log.warning("pollPIN id=\(id): HTTP \(http.statusCode)")
+        }
+        let pin = try JSONDecoder().decode(PlexPINResponse.self, from: data)
+        if let token = pin.authToken {
+            log.info("pollPIN id=\(id): authToken received ✓")
+            return token
+        }
+        log.debug("pollPIN id=\(id): no token yet (expiresAt=\(pin.expiresAt ?? "?", privacy: .public))")
+        return nil
     }
 
     func getHomeUsers(token: String) async throws -> [PlexUser] {
